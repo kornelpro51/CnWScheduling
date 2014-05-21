@@ -13,7 +13,17 @@
     "morgan": "~1.0.0",
     "sequelize": "~2.0.0-beta.2",
     "sqlite3": "~2.1.5",
-    "lodash": "~2.4.1"
+    "lodash": "~2.4.1",
+    "mysql": "~2.2.0",
+    "passport": "latest",
+    "passport-local": "latest",
+    "compression": "latest",
+    "connect-flash": "latest",
+    "view-helpers": "latest",
+    "jade": "~1.0.2",
+    "consolidate": "~0.10.0",
+    "swig": "latest",
+    "serve-favicon": "latest"
   },
   "devDependencies": {
     "grunt": "~0.4.2",

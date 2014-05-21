@@ -1,29 +1,22 @@
-var express        = require('express')
-  , bodyParser     = require('body-parser')
-  , errorHandler   = require('errorhandler')
-  , methodOverride = require('method-override')
-  , morgan         = require('morgan')
-  , http           = require('http')
-  , path           = require('path')
-  , db             = require('./app/models')
-
+var express         = require('express')
+  , passport        = require('passport')
+  , http            = require('http')
+  , bodyParser      = require('body-parser')
 
 var app = express()
 
-// all environments
-app.set('port', process.env.PORT || 3000)
-app.set('views', __dirname + '/app/views')
-app.set('view engine', 'jade')
-app.use(morgan('dev'))
-app.use(bodyParser())
-app.use(methodOverride())
-app.use(express.static(path.join(__dirname, 'public')))
+var config          = require('./config/config')
+  , configExpress   = require('./config/express')
+  , configRoutes    = require('./config/routes')
+  , configPassport  = require('./config/passport')
 
-// development only
-if ('development' === app.get('env')) {
-  app.use(errorHandler())
-}
+var db              = require('./app/models')(config)
 
+var router = configRoutes( passport, db );    
+
+app.customRouter = router
+configPassport( passport, db )
+configExpress( config, app, passport)
 
 
 db
@@ -32,6 +25,7 @@ db
   .complete(function(err) {
     if (err) {
       throw err
+      console.log();
     } else {
       http.createServer(app).listen(app.get('port'), function() {
         console.log('Express server listening on port ' + app.get('port'))
