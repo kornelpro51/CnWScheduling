@@ -1,20 +1,22 @@
 var auth = require('./middlewares/authorization');
 var express = require('express');
 
-module.exports = function (passport, db) {
+module.exports = function (app, passport, db) {
 	"use strict";
-	var router = express.Router(/*{caseSensitive: true, strict: true}*/);
-
+	
 	var webroute = require('../routes/index');
 
-	router.get('/', webroute.index);
-	router.get('/scheduler', webroute.scheduler);
-	router.get('/signup', webroute.signup);
+	app.get('/', webroute.index);
+	app.get('/home', webroute.index);
+	app.get('/scheduler', webroute.scheduler);
+	app.get('/signup', webroute.signup);
+	app.get('/login', webroute.login);
+	app.get('/contact', webroute.contact);
 	
 	
 	var users = require('../app/controllers/users')(db, passport);
 	var scheduler = require('../app/controllers/scheduler')(db);
-	
 
-	return router;
+	app.post('/login', users.session);
+	app.post('/signup', users.signup);
 }

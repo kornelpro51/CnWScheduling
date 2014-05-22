@@ -8,20 +8,22 @@ module.exports = function( passport, db ) {
 
     // Serialize the user id to push into the session
     passport.serializeUser(function(user, done) {
+        console.log(' --- serializeUser', user);
         done(null, user.user_id);
     });
 
     // Deserialize the user object based on a pre-serialized token
     // which is the user id
     passport.deserializeUser(function(id, done) {
+        console.log(' --- deserializeUser', id);
     	db.Users.find({
                 where :{
                     user_id: id
                 }
-            }).success(function(user) {
-    		done(null, user);
-    	}).failure(function(err) {
-    		done(err, null);
+            }).success(function() {
+    		done(err, user);
+    	}).failure(function() {
+    		done(err, user);
     	})
     });
 
@@ -42,6 +44,7 @@ module.exports = function( passport, db ) {
                         message: 'Unknown user'
                     });
                 }
+                console.log(' --- local strategy auth', email, user);
                 user.authenticate(db, password, function(isAuth) {
                     if (isAuth) {
                         return done(null, user);

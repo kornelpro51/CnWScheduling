@@ -1,7 +1,6 @@
 var express         = require('express')
   , passport        = require('passport')
   , http            = require('http')
-  , bodyParser      = require('body-parser')
 
 var app = express()
 
@@ -12,11 +11,11 @@ var config          = require('./config/config')
 
 var db              = require('./app/models')(config)
 
-var router = configRoutes( passport, db );    
-
-app.customRouter = router
 configPassport( passport, db )
+
 configExpress( config, app, passport)
+
+configRoutes(app, passport, db );    
 
 
 db

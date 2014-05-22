@@ -34,5 +34,12 @@ exports.user = {
             return res.send(401, 'You are not allowed to access this resource');
         }
         next();
+    },
+    authVariable: function (req, res, next) {
+        if ( req.user ) {
+            req.user.name = req.user.given_name + " " + req.user.family_name;
+            res.locals.user = req.user;
+        }
+        next();
     }
 };

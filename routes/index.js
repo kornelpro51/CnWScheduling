@@ -11,6 +11,10 @@ exports.signup = function(req, res) {
 	res.render('auth/signup', { title: 'Scheduler - Dashboard' });
 }
 
+exports.login = function(req, res) {
+	res.render('auth/login', { title: 'Scheduler - Login' });
+}
+
 exports.scheduler = function(req, res) {
 	if (!req.user) {
 		res.redirect('/');
@@ -18,3 +22,8 @@ exports.scheduler = function(req, res) {
 		res.render('scheduler', { title: 'Scheduler - workdspace' });
 	}
 }
+
+exports.contact = function(req, res) {
+	res.render('contactus', { title: 'Scheduler - contact us' });
+}
+

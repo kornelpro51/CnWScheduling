@@ -6,18 +6,26 @@ Sign up here
 	{% if error %}
 	<p class="alert alert-danger">{{error}}</p>
 	{% endif %}
-    <form role="form">
+    <form role="form" method="POST" action="/signup">
+    	<div class="form-group">
+			<label for="given_name">Given Name</label>
+			<input type="text" class="form-control" id="given_name" name="given_name" placeholder="Given Name" value="{{given_name}}">
+		</div>
 		<div class="form-group">
-			<label for="userid">User ID</label>
-			<input type="email" class="form-control" id="userid" name="userid" placeholder="User ID">
+			<label for="family_name">Family Name</label>
+			<input type="text" class="form-control" id="family_name" name="family_name" placeholder="Family Name" value="{{family_name}}">
+		</div>
+		<div class="form-group">
+			<label for="email">Email</label>
+			<input type="text" class="form-control" id="email" name="email" placeholder="Email" value="{{email}}">
 		</div>
 		<div class="form-group">
 			<label for="password">Password</label>
-			<input type="password" class="form-control" id="password" name="password" placeholder="Password">
+			<input type="password" class="form-control" id="password" name="password" placeholder="Password"  value="{{password}}">
 		</div>
 		<div class="form-group">
 			<label for="password">Confirm Password</label>
-			<input type="password" class="form-control" id="confirm-password" name="confirm-password" placeholder="Password">
+			<input type="password" class="form-control" id="confirm_password" name="confirm_password" placeholder="Password">
 		</div>
 		<button type="submit" class="btn btn-default">Submit</button>
 	</form>
