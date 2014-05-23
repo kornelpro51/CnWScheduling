@@ -1,12 +1,21 @@
 <div class="container-fluid">
-    <div class="row">
-        <div class="col-md-8">
-            <h1>Welcome to Scheduler!</h1>
-            <p class="lead">This is your homepage, ready for editing</p>
-
-            <p>
-             <span translate="main.like">If you like this Angular-Express-Sequelize generator, please give us a star at </span>&nbsp;<a href="https://github.com/rayokota/generator-angular-express-sequelize" target="_blank" translate="main.github">Github</a>!
-            </p>
-        </div>
-    </div>
+    <div id="#scheduler" ui-calendar="uiConfig.calendar" ng-model="scheduleSource" calendar="schedule"></div>
 </div>
+
+<script type="text/ng-template" id="myModalContent.html">
+    <div class="modal-header">
+        <h3 class="modal-title">I am a modal!</h3>
+    </div>
+    <div class="modal-body">
+        <ul>
+            <li ng-repeat="item in items">
+                <a ng-click="selected.item = item">{{ item }}</a>
+            </li>
+        </ul>
+        Selected: <b>{{ selected.item }}</b>
+    </div>
+    <div class="modal-footer">
+        <button class="btn btn-primary" ng-click="ok()">OK</button>
+        <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
+    </div>
+</script>
