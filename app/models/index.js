@@ -37,6 +37,9 @@ module.exports = function(config) {
     }
   })
 
+  db.ApptGroup.hasMany(db.ApptGroupMembers, {as: 'members', foreignKey: 'appt_group_id'});
+  db.ApptGroup.hasMany(db.Appt, {as: 'appointments', foreignKey: 'appt_group_id'});
+
   return lodash.extend({
     sequelize: sequelize,
     Sequelize: Sequelize
