@@ -25,13 +25,13 @@ angular.module('scheduler').factory('AppointmentService',['$http', '$resource', 
 			return promise;
 		},
 		createAppointment: function (data) {
-			var promise = $appt.post('/api/v1/appointment/appts').then(function (response) {
+			var promise = $http.post('/api/v1/appointment/appts', data).then(function (response) {
 				return response;
 			});
 			return promise;
 		},
 		modifyAppointment: function (apptId, data) {
-			var promise = $appt.put('/api/v1/appointment/appts/' + apptId).then(function (response) {
+			var promise = $http.put('/api/v1/appointment/appts/' + apptId).then(function (response) {
 				return response;
 			});
 			return promise;

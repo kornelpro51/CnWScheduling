@@ -12,6 +12,11 @@ module.exports = function (app, passport, db) {
 	app.get('/signup', webroute.signup);
 	app.get('/login', webroute.login);
 	app.get('/contact', webroute.contact);
+
+	app.get('/logout', function(req, res){
+		req.logout();
+		res.redirect('/');
+	});
 	
 	
 	var users = require('../app/controllers/users')(db, passport);
@@ -19,7 +24,7 @@ module.exports = function (app, passport, db) {
 
 	app.post('/login', users.session);
 	app.post('/signup', users.signup);
-	
+
 	app.get('/api/v1/appointment/users', appointment.userList)
 	app.get('/api/v1/appointment/appt_types', appointment.apptTypeList)
 	app.get('/api/v1/appointment/appts', appointment.apptGroupList)

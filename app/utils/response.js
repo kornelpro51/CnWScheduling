@@ -7,10 +7,10 @@
  */
 
 exports.success = function(response, result) {
-    console.info("success: ", result);
+    //console.info("success: ", result);
     return response.jsonp({success: 1, result: result});
 }
 exports.error = function(response, error, message) {
-    console.error("error: ", error, message);
+    //console.error("error: ", error, message);
     return response.jsonp({success: 0, err: error, msg: message});
 }

@@ -17,8 +17,13 @@ module.exports = function(db) {
 			})
         },
         apptGroupList : function (req, res) {
-        	db.ApptGroup.findAll().success(function(groups) {
+        	db.ApptGroup.findAll({ include: [
+	        		{ model: db.ApptGroupMembers, as: 'attendees' }, 
+	        		{ model: db.Appt, as: 'appointmentEvents' }
+        		] }).success(function(groups) {
+
 				Response.success(res, groups);
+
 			}).error(function(err) {
 				Response.error(res, err, "Can not get appointment groups.");
 			});
@@ -27,11 +32,44 @@ module.exports = function(db) {
         //-------------------------------------------------------------
 
         createAppointment: function (req, res) {
+        	var body = req.body;
         	db.ApptGroup.create({created_at: new Date(), created_by: req.user.user_id}).success(function (apptGroup) {
-        		Response.success(res, apptGroup)
+        		console.log(apptGroup);
+        		var newMembers = [];
+        		for (var i = 0; i < body.attendees.length; i++) {
+        			newMembers.push({
+        				appt_group_id: apptGroup.get('appt_group_id'),
+        				user_id: body.attendees[i].user_id
+        			});
+        		}
+        		console.log(" -- createAppointmentMembers -- ", newMembers);
+        		db.ApptGroupMembers.bulkCreate(newMembers).success(function(members){
+        			var newAppointments = [];
+	        		for (var i = 0; i < body.appointmentEvents.length; i++) {
+	        			newAppointments.push({
+	        				appt_group_id: apptGroup.get('appt_group_id'),
+	        				user_id: body.appointmentEvents[i].user_id,
+	        				title: body.appointmentEvents[i].title,
+	        				description: body.appointmentEvents[i].content,
+	        				notes: '',
+	        				created_at: new Date(),
+	        				starts_at: body.appointmentEvents[i].starts_at,
+	        				ends_at: body.appointmentEvents[i].ends_at
+	        			});
+	        		}
+	        		console.log(" -- createAppointmentEvents -- ", newAppointments);
+        			db.Appt.bulkCreate(newAppointments).success(function(appts){
+        				Response.success(res, apptGroup);
+        			}).error(function(err) {
+        				Response.error(res, err, "Did not create an appointments.")
+        			})
+        		}).error(function(err) {
+    				Response.error(res, err, "Did not create an appointment members.")
+    			})
         	}).error(function (err) {
         		Response.error(res, err, "Did not create an appointment group.")
         	});
+			console.log(" -- createAppointment -- ", req.body);
         },
         modifyAppointment: function (req, res) {
         	req.ApptGroup.save().success(function() {

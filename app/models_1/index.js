@@ -41,11 +41,8 @@ module.exports = function(config) {
   //db.ApptGroup.hasMany(db.Users, {as: 'Members'});
   //db.ApptGroup.hasMany(db.Appt, {as: 'Appointments'});
   
-  db.ApptGroupMembers.belongsTo(db.ApptGroup, { foreignKey: 'appt_group_id', useJunctionTable: false  })
-  db.ApptGroup.hasMany(db.ApptGroupMembers, { as: 'attendees', foreignKey: 'appt_group_id', useJunctionTable: false  })
-
-  db.Appt.belongsTo(db.ApptGroup, { foreignKey: 'appt_group_id', useJunctionTable: false  })
-  db.ApptGroup.hasMany(db.Appt, { as: 'appointmentEvents', foreignKey: 'appt_group_id', useJunctionTable: false  })
+  db.Users.belongsTo(db.ApptGroup)
+  db.ApptGroup.hasMany(db.Users)
   //User.hasMany(Tool, { as: 'Instruments' })
 
   return lodash.extend({

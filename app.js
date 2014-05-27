@@ -11,23 +11,23 @@ var config          = require('./config/config')
 
 var db              = require('./app/models')(config)
 
-configPassport( passport, db )
+  configPassport( passport, db )
 
-configExpress( config, app, passport)
+  configExpress( config, app, passport)
 
-configRoutes(app, passport, db );    
+  configRoutes(app, passport, db );    
 
 
-db
-  .sequelize
-  .sync()
-  .complete(function(err) {
-    if (err) {
-      throw err
-      console.log();
-    } else {
-      http.createServer(app).listen(app.get('port'), function() {
-        console.log('Express server listening on port ' + app.get('port'))
-      })
-    }
-  })
+  db
+    .sequelize
+    .sync()
+    .complete(function(err) {
+      if (err) {
+        throw err
+        console.log();
+      } else {
+        http.createServer(app).listen(app.get('port'), function() {
+          console.log('Express server listening on port ' + app.get('port'))
+        })
+      }
+    })

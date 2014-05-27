@@ -3,7 +3,7 @@ angular.module('scheduler')
         $scope.uiConfig = {
             calendar: {
                 height: 450,
-                editable: true,
+                editable: false,
                 selectable: true,
                 header: {
                     left: 'month agendaWeek agendaDay',
@@ -19,41 +19,27 @@ angular.module('scheduler')
             }
         }
 
-        $scope.calendarSource = [{
-            events: [
-                {
-                    title: 'Event1',
-                    start: '2014-04-04'
-                },
-                {
-                    title: 'Event2',
-                    start: '2014-05-05'
-                }
-            ],
-            color: 'yellow',   // an option!
-            textColor: 'black' // an option!
-        },{
-            events: [
-                {
-                    title: 'Event1',
-                    start: '2014-05-04'
-                },
-                {
-                    title: 'Event2',
-                    start: '2014-05-05'
-                }
-            ],
-            color: 'green',   // an option!
-            textColor: 'black' // an option!
-        }];
-        $scope.appointments = [];
+        $scope.calendarSource = [];
+        $scope.appointmentInfos = [];
 
         function createFullcalendarEvent(data) {
-
+            //$scope.calendarSource.push(data);
+            var calEvent = {};
+            calEvent.events = [];
+            angular.forEach(data.appointmentEvents, function(evt, key) {
+                calEvent.events.push({
+                    title: evt.title,
+                    start: evt.starts_at,
+                    end: evt.ends_at,
+                    allDay: false
+                });
+            });
+            calEvent.meta = jQuery.extend({}, data);
+            $scope.calendarSource.push(calEvent);
         }
 
         function convertToDBFormat(data) {
-            if( Object.prototype.toString.call( data ) === '[object Array]' ) { {
+            if( Object.prototype.toString.call( data ) === '[object Array]' ) { 
                 angular.forEach(data, function(value, key) {
                     value.starts_at = new Date(value.date + " " + value.startTime);
                     value.ends_at = new Date(value.date + " " + value.endTime);
@@ -65,7 +51,7 @@ angular.module('scheduler')
         }
 
         function convertFromDBFormat(data) {
-            if( Object.prototype.toString.call( data ) === '[object Array]' ) { {
+            if( Object.prototype.toString.call( data ) === '[object Array]' ) {
                 angular.forEach(data, function(value, key) {
                     value.date = dateFormat(value.starts_at, "mm/dd/yyyy");
                     value.startTime = dateFormat(value.starts_at, "hh:MM TT");
@@ -80,25 +66,25 @@ angular.module('scheduler')
 
         $scope.init = function () {
             AppointmentService.getApptGroupList().then(function(data) {
-                angular.forEach(data, function(value, key) {
+                $scope.appointmentInfos = data.data.result;
+                angular.forEach($scope.appointmentInfos, function(value, key) {
+                    convertFromDBFormat(value.appointmentEvents);
                     createFullcalendarEvent(value);
                 });
             });
         }
 
         $scope.alertEventClick = function (calEvent, jsEvent, view, target) {
-
+            $scope.openWizard(dateFormat(calEvent.start, "mm/dd/yyyy"), calEvent.source.meta);
         }
         $scope.alertDayClick = function (date, allDay, jsEvent, view, target) {
-            $scope.openWizard();
+            $scope.openWizard(date);
         }
         
-        $scope.openWizard = function(size) {
-
+        $scope.openWizard = function(date, initialData) {
             var modalInstance = $modal.open({
               templateUrl: 'myModalContent.html',
               controller: 'ModalInstanceCtrl',
-              size: size,
               resolve: {
                 paramUsers: function () { 
                     var pr = AppointmentService.getUserList();
@@ -107,15 +93,25 @@ angular.module('scheduler')
                 paramTypes: function () {
                     var pr = AppointmentService.getApptTypeList();
                     return pr; 
-                }
+                },
+                pickupDate: function() { return date; },
+                initialData: function () { return initialData; }
               }
             });
 
-            modalInstance.result.then(function (appointments) {
-                convertToDBFormat(appointments.appointments);
-                AppointmentService.createAppointment(appointments).then(function() {
-                    
-                });
+            modalInstance.result.then(function (appt) {
+                convertToDBFormat(appt.appointmentEvents);
+                if (typeof appt.appt_group_id == "undefined") { // new appointment is created.
+                    AppointmentService.createAppointment(appt).then(function(result) {
+                        $scope.appointmentInfos.push(appt);
+                        createFullcalendarEvent(appt);
+                    });
+                } else {
+                    //AppointmentService.updateAppointment(appt).then(function(result) {
+                    //    $scope.appointmentInfos.push(appt);
+                    //    createFullcalendarEvent(appt);
+                    //});
+                }
             }, function () {
                 console.log('Modal dismissed at: ' + new Date());
             });
@@ -123,19 +119,20 @@ angular.module('scheduler')
     }]);
 
 angular.module('scheduler')
-    .controller('ModalInstanceCtrl', ['$scope', '$modalInstance', 'paramUsers', 'paramTypes', function ($scope, $modalInstance, paramUsers, paramTypes) {
+    .controller('ModalInstanceCtrl', ['$scope', '$modalInstance', 'paramUsers', 'paramTypes', 'pickupDate', 'initialData', function ($scope, $modalInstance, paramUsers, paramTypes, pickupDate, initialData) {
     $scope.step = 0;    
+    $scope.pickupDate = pickupDate;
     
     $scope.info = {
         users: [],
         types: []
-    }    
+    }
 
     $scope.data = {
         attendees : [],
-        appointments : []
+        appointmentEvents : []
     }
-    
+
     $scope.newAttendee = {};
     $scope.newAppointment = {};
 
@@ -164,7 +161,7 @@ angular.module('scheduler')
         }
     }
 
-    function ResetAppointment() {
+    function ResetAppointment(initialDate) {
         $scope.newAppointment = {
             type         : '',
             title        : '',
@@ -175,7 +172,10 @@ angular.module('scheduler')
         }
         if ($scope.info.types.length > 0) {
             $scope.newAppointment.type = $scope.info.types[0].appt_type_id;
-        }        
+        }
+        if (initialDate instanceof Date) {
+            $scope.newAppointment.date = dateFormat($scope.pickupDate, "mm/dd/yyyy");
+        }
     }
 
     function calcMinutesDiff (from, to) {
@@ -190,10 +190,45 @@ angular.module('scheduler')
         return toMinutes - fromMinutes;
     }
 
+    function getUserEmail (userId) {
+        var email = null;
+        angular.forEach($scope.info.users, function(user, idx) {
+            if(user.user_id == userId) {
+                email = user.email;
+            }
+        });
+        return email;
+    }
+
+    function getUserInfo (userId) {
+        var userinfo = null;
+        angular.forEach($scope.info.users, function(user, idx) {
+            if(user.user_id == userId) {
+                userinfo = user;
+            }
+        });
+        return userinfo;   
+    }
+
+    function initializeData() {
+        if (typeof initialData != "undefined") {
+            $scope.data = jQuery.extend({}, initialData);
+            angular.forEach($scope.data.attendees, function(attendee, key) {
+                var user = getUserInfo(attendee.user_id);
+                attendee.firstName = user.given_name;
+                attendee.lastName = user.family_name;
+                attendee.email = user.email;
+                attendee.editMode = false;
+            });
+        }
+    }
+
     LoadInformations();
 
     ResetAttendee();
-    ResetAppointment();
+    ResetAppointment($scope.pickupDate);
+
+    initializeData();
 
     // ---------------------------------------------
 
@@ -219,6 +254,8 @@ angular.module('scheduler')
         if (form.$valid) {
             var att = jQuery.extend({}, $scope.newAttendee);
             att.editMode = false;
+            att.email = getUserEmail(att.user_id);
+            
             $scope.data.attendees.push(att);
             form.$setPristine();
             ResetAttendee();
@@ -234,6 +271,7 @@ angular.module('scheduler')
     $scope.completeAttendee = function (form, attendee) {
         if (form.$valid) {
             attendee.editMode = false;
+            attendee.email = getUserEmail(attendee.user_id);
         } else {
             form.$setDirty();
             alert("Please input user names.");
@@ -248,7 +286,19 @@ angular.module('scheduler')
     // -----------------------------------------------
 
     $scope.done = function() {
-        $modalInstance.close($scope.data);
+        if (form.$valid) {
+            if (calcMinutesDiff($scope.newAppointment.startTime, $scope.newAppointment.endTime) < 10) {
+                alert("The appointment duration should be larger than 10 minuets.")
+                return;
+            } else {
+                var app = jQuery.extend({}, $scope.newAppointment);
+                $scope.data.appointmentEvents.push(app);
+                ResetAppointment();
+                form.$setPristine();
+
+                $modalInstance.close($scope.data);
+            }
+        }
     };
 
     $scope.addAnother = function(form) {
@@ -258,7 +308,7 @@ angular.module('scheduler')
                 return;
             } else {
                 var app = jQuery.extend({}, $scope.newAppointment);
-                $scope.data.appointments.push(app);
+                $scope.data.appointmentEvents.push(app);
                 ResetAppointment();
                 form.$setPristine();
             }
