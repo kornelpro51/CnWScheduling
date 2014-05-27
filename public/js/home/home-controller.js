@@ -103,6 +103,9 @@ angular.module('scheduler')
                 convertToDBFormat(appt.appointmentEvents);
                 if (typeof appt.appt_group_id == "undefined") { // new appointment is created.
                     AppointmentService.createAppointment(appt).then(function(result) {
+                        if ( result.data && result.data.success) {
+                            appt.appt_group_id = result.data.result.appt_group_id;
+                        }
                         $scope.appointmentInfos.push(appt);
                         createFullcalendarEvent(appt);
                     });
@@ -285,7 +288,7 @@ angular.module('scheduler')
 
     // -----------------------------------------------
 
-    $scope.done = function() {
+    $scope.done = function(form) {
         if (form.$valid) {
             if (calcMinutesDiff($scope.newAppointment.startTime, $scope.newAppointment.endTime) < 10) {
                 alert("The appointment duration should be larger than 10 minuets.")
