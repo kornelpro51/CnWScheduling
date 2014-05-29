@@ -27,6 +27,9 @@ node_modules
 # skip bower installed files
 public/lib
 
+# Webstorm/Idea
+workspace.xml
+tasks.xml
 
 .DS_Store
 *.swp
