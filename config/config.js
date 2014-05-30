@@ -7,9 +7,9 @@ module.exports = {
 		viewPath     : 'app/views'
 	},
 	db : {
-		host         : '192.168.219',
+		host         : '127.0.0.1',
 		user         : 'root',
-		password     : 'root',
+		//password     : 'root',
 		database     : 'scheduler',
 		port         : "3306",
 		wait_timeout : 1000

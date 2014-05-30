@@ -1,23 +1,23 @@
 {
   "development": {
     "username": "root",
-    "password": "root",
+    //"password": "root",
     "database": "scheduler",
-    "host": "192.168.219",
+    "host": "127.0.0.1",
     "dialect": "mysql"
   },
   "test": {
     "username": "root",
-    "password": "root",
+    //"password": "root",
     "database": "scheduler",
-    "host": "192.168.219",
+    "host": "127.0.0.1",
     "dialect": "mysql"
   },
   "production": {
     "username": "root",
-    "password": "root",
+    //"password": "root",
     "database": "scheduler",
-    "host": "192.168.219",
+    "host": "127.0.0.1",
     "dialect": "mysql"
   }
 }
