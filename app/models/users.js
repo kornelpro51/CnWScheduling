@@ -12,7 +12,7 @@ module.exports = function(sequelize, Sequelize) {
 			type: Sequelize.INTEGER(5)
 		},
 		{
-			tableName: 'Users',
+			tableName: 'users',
 			timestamps: false,
 			instanceMethods: {
 				authenticate: function(db, password, cb) {

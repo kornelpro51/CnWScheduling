@@ -13,6 +13,7 @@ var express          = require('express')
 //  , session         = require('express-session')
   , middleware      = require('./middlewares/authorization')
   , MongoStore = require('connect-mongo')(express)
+  , MySQLStore = require('./session/express-session-mysql')(express)
 
 module.exports = function( config, app, passport ) {
     
@@ -64,7 +65,12 @@ module.exports = function( config, app, passport ) {
                 {
                     secret: 'mybeeble-3hXa6JpcA -?exc]_64_4.Y%*:Zj@_$;lY/jLOy?', 
                     cookie: { expires: new Date(Date.now() + 60 * 10000), maxAge: 60 * 10000},
-                    store: new MongoStore({ url: 'mongodb://localhost/cnwscheduleSession' })
+                    //store: new MongoStore({ url: 'mongodb://localhost/cnwscheduleSession' })
+                    store: new MySQLStore(config.db.database, config.db.user, config.db.password, {
+                        dialect: "mysql",
+                        host: config.db.host,
+                        port: config.db.port
+                    })
                 }
             ));
 
