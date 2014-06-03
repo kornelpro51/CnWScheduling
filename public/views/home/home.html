@@ -94,17 +94,17 @@
 				</div>
 				</form>
 			</div>
-	        <form class='row' name='newAttendeeForm' id='newAttendeeForm' novalidate >
-				<div class = "col-xs-8">
+	        <form class='row' name='newAttendeeForm' id='newAttendeeForm' novalidate>
+				<div class = "col-xs-8" ng-init="initFormDirty(newAttendeeForm)">
 	       			<div class="row">
-			        	<div class = "col-xs-4 p-t-3" ng-class="{'has-error': newAttendeeForm.email.$invalid && newAttendeeForm.email.$dirty }">
-			    			<input type="hidden" ui-select2="select2Options" ng-model="newAttendee.id"  class="full-width" placeholder="Enter Email" required>
+			        	<div class = "col-xs-4 p-t-3" ng-class="{'has-error': newAttendeeForm.email.$invalid && newAttendeeFormInvalid }">
+			    			<input type="hidden" ui-select2="select2Options" name="email" ng-model="newAttendee.id"  class="full-width" placeholder="Enter Email" required>
 						</div>
-						<div class = "col-xs-4" ng-class="{'has-error': newAttendeeForm.firstname.$invalid && newAttendeeForm.firstname.$dirty }">
+						<div class = "col-xs-4" ng-class="{'has-error': newAttendeeForm.firstname.$invalid && (newAttendeeForm.firstname.$dirty || newAttendeeFormInvalid) }">
 							<input type="text" ng-model="newAttendee.firstName" name="firstname" class="form-control" placeholder="First Name" required ng-show="newAttendee.isNameConfigurable">
 							<span ng-hide="newAttendee.isNameConfigurable">{{newAttendee.lastName}}</span>
 						</div>
-						<div class = "col-xs-4" ng-class="{'has-error': newAttendeeForm.lastname.$invalid && newAttendeeForm.lastname.$dirty }">
+						<div class = "col-xs-4" ng-class="{'has-error': newAttendeeForm.lastname.$invalid && (newAttendeeForm.lastname.$dirty || newAttendeeFormInvalid) }">
 							<input type="text" ng-model="newAttendee.lastName" name="lastname" class="form-control" placeholder="Last Name" required ng-show="newAttendee.isNameConfigurable">
 							<span ng-hide="newAttendee.isNameConfigurable">{{newAttendee.lastName}}</span>
 						</div>
@@ -114,6 +114,10 @@
 					<button class="btn btn-default" ng-click="addAttendee(newAttendeeForm)">Add</button>
 				</div>
 	        </form>
+	        <div class="alert alert-info alert-dismissable">
+				<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+				<strong>Tip : </strong> If you can not find a user from dropdown list, type a new user&prime;s email address and press key &Prime;Enter&Prime;.
+			</div>
         </div>
         <div ng-show="step==1">
         	<h4>Appointment</h4>
@@ -123,20 +127,20 @@
 	        		<select class="form-control" name="type"  ng-class="{'has-error': appointmentForm.type.$invalid && appointmentForm.type.$dirty }" ng-model="newAppointment.type" ng-options="type.appt_type_id as type.title for type in info.types" required placeholder="Type"></select>
 	        	</div>
 	        	<div class="form-group" ng-class="{'has-error': appointmentForm.title.$invalid && appointmentForm.title.$dirty }">
-	        		<input type="text" ng-model="newAppointment.title" name="title" class="form-control" placeholder="title" required>
+	        		<input type="text" ng-model="newAppointment.title" name="title" class="form-control" placeholder="Title *" required>
 	        	</div>
 	        	<div class="form-group row">
 	        		<div class = "col-xs-3" ng-class="{'has-error': appointmentForm.date.$invalid && appointmentForm.date.$dirty }">
-	        			<input type="text" class="form-control" ng-model="newAppointment.date" name="date" ng-required bs-datepicker data-date-format="MM/dd/yyyy" data-date-type="string" placeholder="Date">
+	        			<input type="text" class="form-control" ng-model="newAppointment.date" name="date" required bs-datepicker data-date-format="MM/dd/yyyy" data-date-type="string" placeholder="Date *" noblank>
 		        	</div>
 		        	<div class = "col-xs-3" ng-class="{'has-error': appointmentForm.starttime.$invalid && appointmentForm.starttime.$dirty }">
-		        		<input type="text" class="form-control" size="8" ng-model="newAppointment.startTime" name="starttime" ng-required bs-timepicker minute-step="1" data-time-type="string" data-time-format='hh:mm a' placeholder="Start Time">
+		        		<input type="text" class="form-control" size="8" ng-model="newAppointment.startTime" name="starttime" required bs-timepicker minute-step="1" data-time-type="string" data-time-format='hh:mm a' placeholder="Start Time *" noblank>
 		        	</div>
 		        	<div class = "col-xs-1">
 		        		<label class="control-label">to</label>
 		        	</div>
 		        	<div class = "col-xs-3" ng-class="{'has-error': appointmentForm.endtime.$invalid && appointmentForm.endtime.$dirty }">
-		        		<input type="text" class="form-control" size="8" ng-model="newAppointment.endTime" name="endtime" ng-required bs-timepicker minute-step="1" data-time-type="string" data-time-format='hh:mm a' placeholder="End Time">
+		        		<input type="text" class="form-control" size="8" ng-model="newAppointment.endTime" name="endtime" ng-required bs-timepicker minute-step="1" data-time-type="string" data-time-format='hh:mm a' placeholder="End Time *" noblank>
 		        	</div>
 		        </div>
 	        	<div class="form-group">
@@ -149,16 +153,16 @@
 		        </div>
 	        </form>
         </div>
-        {{parameters}}
+        {{newAppointment}}
     </div>
     <div class="modal-footer">
     	<div ng-show="step==0">
-        	<button class="btn btn-primary" ng-click="next()">Next</button>
+        	<button class="btn btn-primary" ng-click="next()" ng-class="{'disabled': data.attendees.length <= 0}">Next</button>
         	<button class="btn btn-warning" ng-click="cancel()">Cancel</button>
         </div>
         <div ng-hide="step==0">
-        	<button class="btn btn-primary" ng-click="done(appointmentForm)">Done</button>
-        	<button class="btn btn-primary" ng-click="addAnother(appointmentForm)">Add another step</button>
+        	<button class="btn btn-primary" ng-click="done(appointmentForm)" ng-class="">Done</button>
+        	<button class="btn btn-primary" ng-click="addAnother(appointmentForm)" ng-class="">Add another step</button>
         	<button class="btn btn-warning" ng-click="cancel()">Cancel</button>
         </div>
     </div>

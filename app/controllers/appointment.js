@@ -37,10 +37,14 @@ module.exports = function(db) {
         		console.log(apptGroup);
         		var newMembers = [];
         		for (var i = 0; i < body.attendees.length; i++) {
-        			newMembers.push({
-        				appt_group_id: apptGroup.get('appt_group_id'),
-        				user_id: body.attendees[i].user_id
-        			});
+                    if (body.attendees.is_new) {
+                        
+                    } else {
+                        newMembers.push({
+                            appt_group_id: apptGroup.get('appt_group_id'),
+                            user_id: body.attendees[i].user_id
+                        });
+                    }
         		}
         		console.log(" -- createAppointmentMembers -- ", newMembers);
         		db.ApptGroupMembers.bulkCreate(newMembers).success(function(members){

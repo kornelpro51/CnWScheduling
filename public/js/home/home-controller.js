@@ -158,7 +158,15 @@ angular.module('scheduler')
     }
 
     $scope.newAttendee = {};
-    $scope.newAppointment = {};
+    $scope.newAppointment = {
+        type         : '',
+        title        : '',
+        date         : '',
+        startTime    : '',
+        endTime      : '',
+        description  : '',
+        notes        : '',
+    }
 
 
     $scope.dateOptions = {
@@ -182,6 +190,8 @@ angular.module('scheduler')
         'multiple': false,
         'data': $scope.info.users
     };
+
+    $scope.newAttendeeFormInvalid = false;
 
     function LoadInformations () {
         if ( paramUsers.status == 200 && paramUsers.data.success ) {
@@ -330,6 +340,10 @@ angular.module('scheduler')
             }
         }
     });
+    $scope.initFormDirty = function(form) {
+        console.log("---- initFormDirty ---- ");
+        form.$setPristine();
+    }
     $scope.addAttendee = function (form) {
         if (form.$valid) {
             var att = jQuery.extend({}, $scope.newAttendee);
@@ -351,13 +365,16 @@ angular.module('scheduler')
                     is_new: true
                 });
             }
-            
+
+            $('#newAttendeeForm').find('input[name="firstname"]').focus();
             $scope.data.attendees.push(att);
+            $scope.newAttendeeFormInvalid = false;
             form.$setPristine();
             ResetAttendee();
             //form.$setValidity();
         } else {
             form.$setDirty();
+            $scope.newAttendeeFormInvalid = true;
             alert("Please select a email address and input user names.");
         }
     }
@@ -409,6 +426,12 @@ angular.module('scheduler')
 
                 $modalInstance.close($scope.data);
             }
+        } else {
+            form.title.$dirty = true;
+            form.date.$dirty = true;
+            form.starttime.$dirty = true;
+            form.endtime.$dirty = true;
+            alert("Please input required fields.");
         }
     };
 
@@ -423,6 +446,12 @@ angular.module('scheduler')
                 ResetAppointment();
                 form.$setPristine();
             }
+        } else {
+            form.title.$dirty = true;
+            form.date.$dirty = true;
+            form.starttime.$dirty = true;
+            form.endtime.$dirty = true;
+            alert("Please input required fields.");
         }
     }    
 
