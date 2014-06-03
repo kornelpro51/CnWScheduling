@@ -1,14 +1,60 @@
 <div class="container-fluid" ng-init="init()">
     <div id="#scheduler" ui-calendar="uiConfig.calendar" ng-model="calendarSource" calendar="schedule"></div>
 </div>
+<script type="text/ng-template" id="viewAppointmentModal.html">
+	<div class="modal-header">
+        <h3 class="modal-title">View your appointment</h3>
+    </div>
+    <div class="modal-body">
+    	<h4>Appointment Detail</h4>
+    	<div class="well">
+    		<div>Start : {{currentAppointment.date}} {{currentAppointment.startTime}}</div>
+    		<div>End : {{currentAppointment.date}} {{currentAppointment.endTime}}</div>
+    		<div>Title : {{currentAppointment.title}}</div>
+    		<div>Description : {{currentAppointment.description}}</div>
+    		<div>Notes : {{currentAppointment.notes}}</div>
+    	</div>
+    	<h4>Attendees</h4>
+    	<div class="well">
+    		<div class="row">
+				<div class = "col-xs-4">
+	    			Email
+				</div>
+				<div class = "col-xs-4">
+					First Name
+				</div>
+				<div class = "col-xs-4">
+					Last Name
+				</div>
+			</div>
+			<hr>
+    		<div class="row" ng-repeat="attendee in data.attendees">
+				<div class = "col-xs-4">
+	    			{{attendee.email}}
+				</div>
+				<div class = "col-xs-4">
+					{{attendee.firstName}}
+				</div>
+				<div class = "col-xs-4">
+					{{attendee.lastName}}
+				</div>
+			</div>
+    	</div>
+    </div>
+    <div class="modal-footer">
+    	<button class="btn btn-primary btn-warning" ng-click="close()">Close</button>
+	    <button class="btn btn-primary pull-left" ng-click="prevAppointment()" ng-class="{'disabled': currentPos <= 0}">Prev</button>
+	    <button class="btn btn-primary pull-left" ng-click="nextAppointment()" ng-class="{'disabled': currentPos >= endPos}">Next</button>
+    </div>
+</script>
 
-<script type="text/ng-template" id="myModalContent.html">
+<script type="text/ng-template" id="createAppointmentModal.html">
     <div class="modal-header">
-        <h3 class="modal-title">Create your appointment</h3>
+        <h3 class="modal-title">{{dlgTitle}}</h3>
     </div>
     <div class="modal-body">
     	<div ng-show="step==0">
-	        <h5>Create Group</h5>
+	        <h4>Create Group</h4>
         	<div class="row" ng-repeat="attendee in data.attendees">
         		<form name='editAttendeeForm' novalidate >
         		<div class = "col-xs-8">
