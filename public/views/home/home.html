@@ -25,16 +25,19 @@
         			</div>
 	       			<div class="row" ng-show="attendee.editMode">
 			        	<div class = "col-xs-4 p-t-3" ng-class="{'has-error': editAttendeeForm.email.$invalid && editAttendeeForm.email.$dirty }">
-			    			<select ui-select2 ng-model="attendee.user_id" name="email" data-placeholder="Enter email" class="full-width" required>
+			    			<select ui-select2 ng-model="attendee.user_id" name="email" data-placeholder="Enter email" class="attendee_select2 full-width" ng-change="changeAttendee(attendee)" required>
 							    <option value=""></option>
 							    <option ng-repeat="user in info.users" value="{{user.user_id}}">{{user.email}}</option>
 							</select>
+							<!-- input type="hidden" ui -select2="select2Options" ng -model="attendee.id"  class="full-width" placeholder="Enter Email" required -->
 						</div>
 						<div class = "col-xs-4" ng-class="{'has-error': editAttendeeForm.firstname.$invalid && editAttendeeForm.firstname.$dirty }">
-							<input type="text" ng-model="attendee.firstName" name="firstname" class="form-control" placeholder="First Name" required>
+							<!-- input type="text" ng-model="attendee.firstName" name="firstname" class="form-control" placeholder="First Name" required -->
+							<span>{{attendee.firstName}}</span>
 						</div>
 						<div class = "col-xs-4" ng-class="{'has-error': editAttendeeForm.lastname.$invalid && editAttendeeForm.lastname.$dirty }">
-							<input type="text" ng-model="attendee.lastName" name="lastname" class="form-control" placeholder="Last Name" required>
+							<!-- input type="text" ng-model="attendee.lastName" name="lastname" class="form-control" placeholder="Last Name" required -->
+							<span>{{attendee.lastName}}</span>
 						</div>
 					</div>
 				</div>
@@ -49,16 +52,15 @@
 				<div class = "col-xs-8">
 	       			<div class="row">
 			        	<div class = "col-xs-4 p-t-3" ng-class="{'has-error': newAttendeeForm.email.$invalid && newAttendeeForm.email.$dirty }">
-			    			<select ui-select2 ng-model="newAttendee.user_id" name="email" data-placeholder="Enter email" class="full-width" required>
-							    <option value=""></option>
-							    <option ng-repeat="user in info.users" value="{{user.user_id}}">{{user.email}}</option>
-							</select>
+			    			<input type="hidden" ui-select2="select2Options" ng-model="newAttendee.id"  class="full-width" placeholder="Enter Email" required>
 						</div>
 						<div class = "col-xs-4" ng-class="{'has-error': newAttendeeForm.firstname.$invalid && newAttendeeForm.firstname.$dirty }">
-							<input type="text" ng-model="newAttendee.firstName" name="firstname" class="form-control" placeholder="First Name" required>
+							<input type="text" ng-model="newAttendee.firstName" name="firstname" class="form-control" placeholder="First Name" required ng-show="newAttendee.isNameConfigurable">
+							<span ng-hide="newAttendee.isNameConfigurable">{{newAttendee.lastName}}</span>
 						</div>
 						<div class = "col-xs-4" ng-class="{'has-error': newAttendeeForm.lastname.$invalid && newAttendeeForm.lastname.$dirty }">
-							<input type="text" ng-model="newAttendee.lastName" name="lastname" class="form-control" placeholder="Last Name" required>
+							<input type="text" ng-model="newAttendee.lastName" name="lastname" class="form-control" placeholder="Last Name" required ng-show="newAttendee.isNameConfigurable">
+							<span ng-hide="newAttendee.isNameConfigurable">{{newAttendee.lastName}}</span>
 						</div>
 					</div>
 				</div>
@@ -68,31 +70,36 @@
 	        </form>
         </div>
         <div ng-show="step==1">
-        	<h5>Appointment</h5>
+        	<h4>Appointment</h4>
         	<form class='form' name="appointmentForm">
 	        	<div class="form-group">
-	        		<select class="form-control" name="type"  ng-class="{'has-error': appointmentForm.type.$invalid && appointmentForm.type.$dirty }" ng-model="newAppointment.type" ng-options="type.appt_type_id as type.title for type in info.types" required></select>
+	        		<label>Choose the appointment type.</label>
+	        		<select class="form-control" name="type"  ng-class="{'has-error': appointmentForm.type.$invalid && appointmentForm.type.$dirty }" ng-model="newAppointment.type" ng-options="type.appt_type_id as type.title for type in info.types" required placeholder="Type"></select>
 	        	</div>
 	        	<div class="form-group" ng-class="{'has-error': appointmentForm.title.$invalid && appointmentForm.title.$dirty }">
 	        		<input type="text" ng-model="newAppointment.title" name="title" class="form-control" placeholder="title" required>
 	        	</div>
 	        	<div class="form-group row">
 	        		<div class = "col-xs-3" ng-class="{'has-error': appointmentForm.date.$invalid && appointmentForm.date.$dirty }">
-	        			<input type="text" class="form-control" ng-model="newAppointment.date" name="date" ng-required bs-datepicker data-date-format="MM/dd/yyyy" data-date-type="string">
+	        			<input type="text" class="form-control" ng-model="newAppointment.date" name="date" ng-required bs-datepicker data-date-format="MM/dd/yyyy" data-date-type="string" placeholder="Date">
 		        	</div>
 		        	<div class = "col-xs-3" ng-class="{'has-error': appointmentForm.starttime.$invalid && appointmentForm.starttime.$dirty }">
-		        		<input type="text" class="form-control" size="8" ng-model="newAppointment.startTime" name="starttime" ng-required bs-timepicker minute-step="1" data-time-type="string" data-time-format='hh:mm a'>
+		        		<input type="text" class="form-control" size="8" ng-model="newAppointment.startTime" name="starttime" ng-required bs-timepicker minute-step="1" data-time-type="string" data-time-format='hh:mm a' placeholder="Start Time">
 		        	</div>
 		        	<div class = "col-xs-1">
 		        		<label class="control-label">to</label>
 		        	</div>
 		        	<div class = "col-xs-3" ng-class="{'has-error': appointmentForm.endtime.$invalid && appointmentForm.endtime.$dirty }">
-		        		<input type="text" class="form-control" size="8" ng-model="newAppointment.endTime" name="endtime" ng-required bs-timepicker minute-step="1" data-time-type="string" data-time-format='hh:mm a'>
+		        		<input type="text" class="form-control" size="8" ng-model="newAppointment.endTime" name="endtime" ng-required bs-timepicker minute-step="1" data-time-type="string" data-time-format='hh:mm a' placeholder="End Time">
 		        	</div>
 		        </div>
 	        	<div class="form-group">
-		        	<label></label>
-		        	<textarea  class="form-control" ng-model="newAppointment.content" rows="8" id="content" name="content"></textarea>
+		        	<label>Description</label>
+		        	<textarea  class="form-control" ng-model="newAppointment.description" rows="5" id="description" name="description"></textarea>
+		        </div>
+		        <div class="form-group m-b-0">
+		        	<label>Notes</label>
+		        	<textarea  class="form-control" ng-model="newAppointment.notes" rows="5" id="notes" name="notes"></textarea>
 		        </div>
 	        </form>
         </div>

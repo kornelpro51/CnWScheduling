@@ -146,12 +146,27 @@ angular.module('scheduler')
         yearRange: '1900:-0'
     };
 
+
+
+    $scope.select2Options = {
+        createSearchChoice:function(term, data) { 
+            if ($(data).filter(function() { 
+                    return this.text.localeCompare(term)===0; 
+                }).length===0) {
+
+                return {id:term, text:term};
+            } 
+        },
+        'multiple': false,
+        'data': $scope.info.users
+    };
+
     function LoadInformations () {
         if ( paramUsers.status == 200 && paramUsers.data.success ) {
-            $scope.info.users = paramUsers.data.result;
+            $scope.info.users = jQuery.extend($scope.info.users, paramUsers.data.result);
         }
         if ( paramTypes.status == 200 && paramTypes.data.success ) {
-            $scope.info.types = paramTypes.data.result;
+            $scope.info.types = jQuery.extend($scope.info.types, paramTypes.data.result);
         }
     }
     
@@ -160,7 +175,8 @@ angular.module('scheduler')
             email : '',
             firstName : '',
             lastName : '',
-            editMode : true
+            editMode : true,
+            isNameConfigurable : true
         }
     }
 
@@ -171,7 +187,8 @@ angular.module('scheduler')
             date         : '',
             startTime    : '',
             endTime      : '',
-            content      : ''
+            description  : '',
+            notes        : '',
         }
         if ($scope.info.types.length > 0) {
             $scope.newAppointment.type = $scope.info.types[0].appt_type_id;
@@ -193,6 +210,13 @@ angular.module('scheduler')
         return toMinutes - fromMinutes;
     }
 
+    function convertInfoUsers2Select2 () {
+        angular.forEach($scope.info.users, function(user, idx) {
+            user.text = user.email;
+            user.id = user.user_id;
+        });
+    }
+
     function getUserEmail (userId) {
         var email = null;
         angular.forEach($scope.info.users, function(user, idx) {
@@ -204,13 +228,23 @@ angular.module('scheduler')
     }
 
     function getUserInfo (userId) {
-        var userinfo = null;
+        var userInfo = null;
         angular.forEach($scope.info.users, function(user, idx) {
             if(user.user_id == userId) {
-                userinfo = user;
+                userInfo = user;
             }
         });
-        return userinfo;   
+        return userInfo;   
+    }
+
+    function getCustomizedUserInfo (userId) {
+        var userInfo = null;
+        angular.forEach($scope.info.users, function(user, idx) {
+            if(user.user_id == userId) {
+                userInfo = user;
+            }
+        });
+        return userInfo;   
     }
 
     function initializeData() {
@@ -227,6 +261,8 @@ angular.module('scheduler')
     }
 
     LoadInformations();
+
+    convertInfoUsers2Select2();
 
     ResetAttendee();
     ResetAppointment($scope.pickupDate);
@@ -253,11 +289,43 @@ angular.module('scheduler')
 
     // ----------------------------------------------
 
+    $scope.$watch('newAttendee.id', function( newID, oldID ) {
+        if ( newID ) {
+            if ( oldID ) {
+                if (newID.id == oldID.id) {
+                    return;
+                }
+            }
+            if (newID.user_id) {
+                $scope.newAttendee.isNameConfigurable = false;
+                $scope.newAttendee.firstName = newID.given_name;
+                $scope.newAttendee.lastName = newID.family_name;
+            } else {
+                $scope.newAttendee.isNameConfigurable = true;
+            }
+        }
+    });
     $scope.addAttendee = function (form) {
         if (form.$valid) {
             var att = jQuery.extend({}, $scope.newAttendee);
             att.editMode = false;
-            att.email = getUserEmail(att.user_id);
+            if (att.id.user_id) {
+                att.user_id = att.id.user_id;
+                att.email = att.id.email;
+            } else {
+                att.user_id = att.id.id;
+                att.email = att.id.text;
+
+                $scope.select2Options.data.push({
+                    id : att.user_id, 
+                    text : att.email,
+                    user_id : att.user_id, 
+                    email : att.email, 
+                    family_name : att.lastName, 
+                    given_name : att.firstName,
+                    is_new: true
+                });
+            }
             
             $scope.data.attendees.push(att);
             form.$setPristine();
@@ -268,12 +336,27 @@ angular.module('scheduler')
             alert("Please select a email address and input user names.");
         }
     }
+    $scope.changeAttendee = function (attendee) {
+        var userInfo = getCustomizedUserInfo(attendee.user_id);
+        if (userInfo) {
+            attendee.email = userInfo.email;
+            attendee.firstName = userInfo.given_name;
+            attendee.lastName = userInfo.family_name;
+        }
+    }
     $scope.editAttendee = function(attendee) {
         attendee.editMode = true;
     }
     $scope.completeAttendee = function (form, attendee) {
         if (form.$valid) {
             attendee.editMode = false;
+            /*if (attendee.id.user_id) {
+                attendee.user_id = attendee.id.user_id;
+                attendee.email = attendee.id.email;
+            } else {
+                attendee.user_id = attendee.id.id;
+                attendee.email = attendee.id.text;
+            }*/
             attendee.email = getUserEmail(attendee.user_id);
         } else {
             form.$setDirty();

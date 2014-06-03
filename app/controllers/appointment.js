@@ -50,8 +50,8 @@ module.exports = function(db) {
 	        				appt_group_id: apptGroup.get('appt_group_id'),
 	        				user_id: body.appointmentEvents[i].user_id,
 	        				title: body.appointmentEvents[i].title,
-	        				description: body.appointmentEvents[i].content,
-	        				notes: '',
+	        				description: body.appointmentEvents[i].description,
+	        				notes: body.appointmentEvents[i].notes,
 	        				created_at: new Date(),
 	        				starts_at: body.appointmentEvents[i].starts_at,
 	        				ends_at: body.appointmentEvents[i].ends_at

@@ -17,6 +17,9 @@ body {
 .p-t-3 {
 	padding-top: 3px;
 }
+.m-b-0 {
+	margin-bottom: 0;
+}
 
 .control-label {
 	padding-top: 7px;
