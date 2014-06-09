@@ -71,6 +71,9 @@ angular.module('scheduler')
                     convertFromDBFormat(value.appointmentEvents);
                     createFullcalendarEvent(value);
                 });
+            }, function(reason) {
+                alert('Failed: ' + reason);
+                window.location.href = "/";
             });
         }
 
@@ -110,6 +113,9 @@ angular.module('scheduler')
                             }
                             $scope.appointmentInfos.push(appt);
                             createFullcalendarEvent(appt);
+                        }, function(reason) {
+                            alert('Failed: ' + reason);
+                            window.location.href = "/";
                         });
                     } else {
                         //AppointmentService.updateAppointment(appt).then(function(result) {
@@ -119,7 +125,14 @@ angular.module('scheduler')
                     }
                 }, function () {
                     console.log('Modal dismissed at: ' + new Date());
+                    window.location.href = "/";
                 });
+                //modalInstance.opened.then(function(result) {
+                //    alert(result);
+                //}
+                //, function(result){
+                //    alert(result);
+                //});
             } else {
                 var modalInstance = $modal.open({
                     templateUrl: 'viewAppointmentModal.html',
@@ -348,6 +361,9 @@ angular.module('scheduler')
                 } else {
                     alert("Did not create new users. Please try again.");
                 }
+            }, function(reason) {
+                alert('Failed: ' + reason);
+                window.location.href = "/";
             });
         } else {
             alert("Please add attendees.")

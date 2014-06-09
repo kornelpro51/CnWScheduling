@@ -18,10 +18,12 @@ exports.requiresLogin = function (req, res, next) {
 exports.user = {
     hasAuthorization: function (req, res, next) {
         "use strict";
-
-        if (req.profile.id !== req.user.id && req.user.role !== 'admin') {
+        if (req.user.id) {
             return res.send(401, 'You are not allowed to access this resource');
         }
+        /*if (req.profile.id !== req.user.id && req.user.role !== 'admin') {
+            return res.send(401, 'You are not allowed to access this resource');
+        }*/
         next();
     },
     /**

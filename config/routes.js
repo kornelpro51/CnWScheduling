@@ -25,14 +25,14 @@ module.exports = function (app, passport, db) {
 	app.post('/login', users.session);
 	app.post('/signup', users.signup);
 
-	app.get('/api/v1/appointment/users', appointment.userList)
-	app.post('/api/v1/appointment/users', appointment.createNewUsers)
-	app.get('/api/v1/appointment/appt_types', appointment.apptTypeList)
-	app.get('/api/v1/appointment/appts', appointment.apptGroupList)
+	app.get('/api/v1/appointment/users', auth.requiresLogin, appointment.userList)
+	app.post('/api/v1/appointment/users', auth.requiresLogin, appointment.createNewUsers)
+	app.get('/api/v1/appointment/appt_types', auth.requiresLogin, appointment.apptTypeList)
+	app.get('/api/v1/appointment/appts', auth.requiresLogin, appointment.apptGroupList)
 
-	app.post('/api/v1/appointment/appts', appointment.createAppointment)
-	app.get('/api/v1/appointment/appts/:apptId', appointment.getAppointment)
-	app.put('/api/v1/appointment/appts/:apptId', appointment.modifyAppointment)
+	app.post('/api/v1/appointment/appts', auth.requiresLogin, appointment.createAppointment)
+	app.get('/api/v1/appointment/appts/:apptId', auth.requiresLogin, appointment.getAppointment)
+	app.put('/api/v1/appointment/appts/:apptId', auth.requiresLogin, appointment.modifyAppointment)
 
 	app.param('apptId', appointment.apptId)
 
