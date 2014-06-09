@@ -143,7 +143,7 @@ angular.module('scheduler')
     }]);
 
 angular.module('scheduler')
-    .controller('CreateAppointmentCtrl', ['$scope', '$modalInstance', 'paramUsers', 'paramTypes', 'pickupDate', 'initialData', function ($scope, $modalInstance, paramUsers, paramTypes, pickupDate, initialData) {
+    .controller('CreateAppointmentCtrl', ['$scope', '$modalInstance', 'paramUsers', 'paramTypes', 'pickupDate', 'initialData', 'AppointmentService', function ($scope, $modalInstance, paramUsers, paramTypes, pickupDate, initialData, AppointmentService) {
     $scope.step = 0;    
     $scope.pickupDate = pickupDate;
     
@@ -193,6 +193,8 @@ angular.module('scheduler')
 
     $scope.newAttendeeFormInvalid = false;
 
+    $scope.states = ["Alabama","Alaska","Arizona","Arkansas","California","Colorado","Connecticut","Delaware","Florida","Georgia","Hawaii","Idaho","Illinois","Indiana","Iowa","Kansas","Kentucky","Louisiana","Maine","Maryland","Massachusetts","Michigan","Minnesota","Mississippi","Missouri","Montana","Nebraska","Nevada","New Hampshire","New Jersey","New Mexico","New York","North Dakota","North Carolina","Ohio","Oklahoma","Oregon","Pennsylvania","Rhode Island","South Carolina","South Dakota","Tennessee","Texas","Utah","Vermont","Virginia","Washington","West Virginia","Wisconsin","Wyoming"];
+    $scope.icons = [{"value":"Gear","label":"Gear"},{"value":"Globe","label":"Globe"},{"value":"Heart","label":"Heart"},{"value":"Camera","label":"Camera"}];
     function LoadInformations () {
         if ( paramUsers.status == 200 && paramUsers.data.success ) {
             $scope.info.users = jQuery.extend($scope.info.users, paramUsers.data.result);
@@ -207,7 +209,6 @@ angular.module('scheduler')
             email : '',
             firstName : '',
             lastName : '',
-            editMode : true,
             isNameConfigurable : true
         }
     }
@@ -229,7 +230,6 @@ angular.module('scheduler')
             $scope.newAppointment.date = dateFormat($scope.pickupDate, "mm/dd/yyyy");
         }
     }
-
     function calcMinutesDiff (from, to) {
         var fromMinutes = parseInt(from.substring(0,2)) * 60+ parseInt(from.substring(3,5));
         var toMinutes = parseInt(to.substring(0,2)) * 60+ parseInt(to.substring(3,5));
@@ -246,6 +246,12 @@ angular.module('scheduler')
         angular.forEach($scope.info.users, function(user, idx) {
             user.text = user.email;
             user.id = user.user_id;
+        });
+    }
+    function convertInfoUsers2BSTypeahead () {
+        angular.forEach($scope.info.users, function(user, idx) {
+            user.label = user.email;
+            user.value = user.email;
         });
     }
 
@@ -297,7 +303,8 @@ angular.module('scheduler')
 
     LoadInformations();
 
-    convertInfoUsers2Select2();
+    //convertInfoUsers2Select2();
+    convertInfoUsers2BSTypeahead();
 
     ResetAttendee();
     ResetAppointment($scope.pickupDate);
@@ -314,8 +321,34 @@ angular.module('scheduler')
         $modalInstance.dismiss('cancel');
     };
     $scope.next = function() {
+        var isDuplicatedUserExist = false;
+        for( var idx = 0; idx < $scope.data.attendees.length - 1; idx++ ) {
+            for( var idx2 = idx + 1; idx2 < $scope.data.attendees.length; idx2++ ) {
+                if ($scope.data.attendees[idx].email == $scope.data.attendees[idx2].email) {
+                    $scope.data.attendees[idx2].hasError = true;
+                    isDuplicatedUserExist = true;
+                }
+            }
+        }
+        if (isDuplicatedUserExist) {
+            alert("Please remove duplicated users.");
+            return;
+        }
         if ($scope.data.attendees.length > 0) {
-            $scope.step = 1;
+            AppointmentService.createNewUsers($scope.data.attendees).then(function(result) {
+                if ( result.data && result.data.success) {
+                    angular.forEach(result.data.result, function(user_db, idx) {
+                        angular.forEach($scope.data.attendees, function (user_client, idx) {
+                            if (user_client.email == user_db.email && user_db.user_id != null) {
+                                user_client.user_id = user_db.user_id;
+                            }
+                        });
+                    });
+                    $scope.step = 1;
+                } else {
+                    alert("Did not create new users. Please try again.");
+                }
+            });
         } else {
             alert("Please add attendees.")
         }
@@ -326,17 +359,27 @@ angular.module('scheduler')
 
     $scope.$watch('newAttendee.id', function( newID, oldID ) {
         if ( newID ) {
-            if ( oldID ) {
-                if (newID.id == oldID.id) {
-                    return;
-                }
+            if ( newID == oldID ) {
+                return;
             }
-            if (newID.user_id) {
+
+            if ( typeof newID == 'object' ) {
                 $scope.newAttendee.isNameConfigurable = false;
                 $scope.newAttendee.firstName = newID.given_name;
                 $scope.newAttendee.lastName = newID.family_name;
+                $scope.newAttendee.email = newID.email;
             } else {
+                for(var idx in $scope.info.users) {
+                    if (newID == $scope.info.users[idx].email ) {
+                        $scope.newAttendee.isNameConfigurable = false;
+                        $scope.newAttendee.firstName = $scope.info.users[idx].given_name;
+                        $scope.newAttendee.lastName = $scope.info.users[idx].family_name;
+                        $scope.newAttendee.email = $scope.info.users[idx].email;
+                        return;
+                    }
+                }
                 $scope.newAttendee.isNameConfigurable = true;
+                $scope.newAttendee.email = newID;
             }
         }
     });
@@ -347,34 +390,24 @@ angular.module('scheduler')
     $scope.addAttendee = function (form) {
         if (form.$valid) {
             var att = jQuery.extend({}, $scope.newAttendee);
-            att.editMode = false;
-            if (att.id.user_id) {
-                att.user_id = att.id.user_id;
-                att.email = att.id.email;
+            if (typeof $scope.newAttendee.id == 'object') {
+                att.firstName = $scope.newAttendee.id.given_name;
+                att.lastName = $scope.newAttendee.id.family_name;
+                att.email = $scope.newAttendee.id.email;
+                att.user_id = $scope.newAttendee.id.user_id;
             } else {
-                att.user_id = att.id.id;
-                att.email = att.id.text;
-
-                $scope.select2Options.data.push({
-                    id : att.user_id, 
-                    text : att.email,
-                    user_id : att.user_id, 
-                    email : att.email, 
-                    family_name : att.lastName, 
-                    given_name : att.firstName,
-                    is_new: true
-                });
+                att.email = $scope.newAttendee.id;
+                att.user_id = null;
             }
 
-            $('#newAttendeeForm').find('input[name="firstname"]').focus();
+            $('#newAttendeeForm').find('input[name="email"]').focus();
             $scope.data.attendees.push(att);
-            $scope.newAttendeeFormInvalid = false;
             form.$setPristine();
             ResetAttendee();
-            //form.$setValidity();
         } else {
-            form.$setDirty();
-            $scope.newAttendeeFormInvalid = true;
+            form.email.$dirty = true;
+            form.firstname.$dirty = true;
+            form.lastname.$dirty = true;
             alert("Please select a email address and input user names.");
         }
     }
@@ -387,11 +420,11 @@ angular.module('scheduler')
         }
     }
     $scope.editAttendee = function(attendee) {
-        attendee.editMode = true;
+        //attendee.editMode = true;
     }
     $scope.completeAttendee = function (form, attendee) {
         if (form.$valid) {
-            attendee.editMode = false;
+            //attendee.editMode = false;
             /*if (attendee.id.user_id) {
                 attendee.user_id = attendee.id.user_id;
                 attendee.email = attendee.id.email;

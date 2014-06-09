@@ -55,10 +55,10 @@
     <div class="modal-body">
     	<div ng-show="step==0">
 	        <h4>Create Group</h4>
-        	<div class="row" ng-repeat="attendee in data.attendees">
+        	<div class="row" ng-repeat="attendee in data.attendees" ng-class="{'error-row': attendee.hasError}">
         		<form name='editAttendeeForm' novalidate >
-        		<div class = "col-xs-8">
-        			<div class="row" ng-hide="attendee.editMode">
+        		<div class = "p-h-5 col-xs-8">
+        			<div class="row" ng-hide="attendee.isNameConfigurable">
         				<div class = "col-xs-4">
 			    			{{attendee.email}}
 						</div>
@@ -69,27 +69,21 @@
 							{{attendee.lastName}}
 						</div>
         			</div>
-	       			<div class="row" ng-show="attendee.editMode">
-			        	<div class = "col-xs-4 p-t-3" ng-class="{'has-error': editAttendeeForm.email.$invalid && editAttendeeForm.email.$dirty }">
-			    			<select ui-select2 ng-model="attendee.user_id" name="email" data-placeholder="Enter email" class="attendee_select2 full-width" ng-change="changeAttendee(attendee)" required>
-							    <option value=""></option>
-							    <option ng-repeat="user in info.users" value="{{user.user_id}}">{{user.email}}</option>
-							</select>
-							<!-- input type="hidden" ui -select2="select2Options" ng -model="attendee.id"  class="full-width" placeholder="Enter Email" required -->
+	       			<div class="row" ng-show="attendee.isNameConfigurable">
+			        	<div class = "col-xs-4" ng-class="{'has-error': editAttendeeForm.email.$invalid && (editAttendeeForm.email.$dirty ) }">
+			    			<input type="text" ng-model="attendee.email" name="email" class="form-control" required autocomplete="off">
 						</div>
 						<div class = "col-xs-4" ng-class="{'has-error': editAttendeeForm.firstname.$invalid && editAttendeeForm.firstname.$dirty }">
-							<!-- input type="text" ng-model="attendee.firstName" name="firstname" class="form-control" placeholder="First Name" required -->
-							<span>{{attendee.firstName}}</span>
+							<input type="text" ng-model="attendee.firstName" name="firstname" class="form-control" placeholder="First Name" required >
 						</div>
 						<div class = "col-xs-4" ng-class="{'has-error': editAttendeeForm.lastname.$invalid && editAttendeeForm.lastname.$dirty }">
-							<!-- input type="text" ng-model="attendee.lastName" name="lastname" class="form-control" placeholder="Last Name" required -->
-							<span>{{attendee.lastName}}</span>
+							<input type="text" ng-model="attendee.lastName" name="lastname" class="form-control" placeholder="Last Name" required>
 						</div>
 					</div>
 				</div>
 				<div class = "col-xs-4">
-					<button class="btn btn-default" ng-click="editAttendee(attendee)"  ng-hide="attendee.editMode">Edit</button>
-					<button class="btn btn-default" ng-click="completeAttendee(editAttendeeForm, attendee)" ng-show="attendee.editMode">Done</button>
+					<!--button class="btn btn-default" ng-click="editAttendee(attendee)"  ng-hide="attendee.editMode">Edit</button-->
+					<!--button class="btn btn-default" ng-click="completeAttendee(editAttendeeForm, attendee)" ng-show="attendee.editMode">Done</button-->
 					<button class="btn btn-default" ng-click="removeAttendee(attendee, $index)">Remove</button>
 				</div>
 				</form>
@@ -97,14 +91,14 @@
 	        <form class='row' name='newAttendeeForm' id='newAttendeeForm' novalidate>
 				<div class = "col-xs-8" ng-init="initFormDirty(newAttendeeForm)">
 	       			<div class="row">
-			        	<div class = "col-xs-4 p-t-3" ng-class="{'has-error': newAttendeeForm.email.$invalid && newAttendeeFormInvalid }">
-			    			<input type="hidden" ui-select2="select2Options" name="email" ng-model="newAttendee.id"  class="full-width" placeholder="Enter Email" required>
+			        	<div class = "col-xs-4" ng-class="{'has-error': newAttendeeForm.email.$invalid && newAttendeeForm.email.$dirty }">
+			    			<input type="text" class="form-control" ng-model="newAttendee.id" name="email" ng-options="user as user.label for user in info.users" placeholder="Enter Email" bs-typeahead required autocomplete="off">
 						</div>
-						<div class = "col-xs-4" ng-class="{'has-error': newAttendeeForm.firstname.$invalid && (newAttendeeForm.firstname.$dirty || newAttendeeFormInvalid) }">
+						<div class = "col-xs-4" ng-class="{'has-error': newAttendeeForm.firstname.$invalid && newAttendeeForm.firstname.$dirty }">
 							<input type="text" ng-model="newAttendee.firstName" name="firstname" class="form-control" placeholder="First Name" required ng-show="newAttendee.isNameConfigurable">
 							<span ng-hide="newAttendee.isNameConfigurable">{{newAttendee.lastName}}</span>
 						</div>
-						<div class = "col-xs-4" ng-class="{'has-error': newAttendeeForm.lastname.$invalid && (newAttendeeForm.lastname.$dirty || newAttendeeFormInvalid) }">
+						<div class = "col-xs-4" ng-class="{'has-error': newAttendeeForm.lastname.$invalid && newAttendeeForm.lastname.$dirty }">
 							<input type="text" ng-model="newAttendee.lastName" name="lastname" class="form-control" placeholder="Last Name" required ng-show="newAttendee.isNameConfigurable">
 							<span ng-hide="newAttendee.isNameConfigurable">{{newAttendee.lastName}}</span>
 						</div>
@@ -153,7 +147,6 @@
 		        </div>
 	        </form>
         </div>
-        {{newAppointment}}
     </div>
     <div class="modal-footer">
     	<div ng-show="step==0">
@@ -166,4 +159,11 @@
         	<button class="btn btn-warning" ng-click="cancel()">Cancel</button>
         </div>
     </div>
+</script>
+
+<script type="text/ng-template" id="customTemplate.html">
+  <a>
+      <img ng-src="http://upload.wikimedia.org/wikipedia/commons/thumb/{{match.model.flag}}" width="16">
+      <span bind-html-unsafe="match.label | typeaheadHighlight:query"></span>
+  </a>
 </script>

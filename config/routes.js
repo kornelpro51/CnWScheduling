@@ -26,6 +26,7 @@ module.exports = function (app, passport, db) {
 	app.post('/signup', users.signup);
 
 	app.get('/api/v1/appointment/users', appointment.userList)
+	app.post('/api/v1/appointment/users', appointment.createNewUsers)
 	app.get('/api/v1/appointment/appt_types', appointment.apptTypeList)
 	app.get('/api/v1/appointment/appts', appointment.apptGroupList)
 

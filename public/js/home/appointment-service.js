@@ -35,6 +35,12 @@ angular.module('scheduler').factory('AppointmentService',['$http', '$resource', 
 				return response;
 			});
 			return promise;
+		},
+		createNewUsers: function(users) {
+			var promise = $http.post('/api/v1/appointment/users', users).then(function (response) {
+				return response;
+			});
+			return promise;	
 		}
 	};
 	return appointmentService;

@@ -1,4 +1,11 @@
 var Response        = require('../utils/response');
+var mysql      = require('mysql');
+var connection = mysql.createConnection({
+  host     : '192.168.0.219',
+  user     : 'root',
+  password : 'root',
+  database : 'scheduler'
+});
 
 module.exports = function(db) {
 	return {
@@ -34,10 +41,9 @@ module.exports = function(db) {
         createAppointment: function (req, res) {
         	var body = req.body;
         	db.ApptGroup.create({created_at: new Date(), created_by: req.user.user_id}).success(function (apptGroup) {
-        		console.log(apptGroup);
         		var newMembers = [];
         		for (var i = 0; i < body.attendees.length; i++) {
-                    if (body.attendees.is_new) {
+                    if (body.attendees[i].is_new) {
                         
                     } else {
                         newMembers.push({
@@ -46,7 +52,6 @@ module.exports = function(db) {
                         });
                     }
         		}
-        		console.log(" -- createAppointmentMembers -- ", newMembers);
         		db.ApptGroupMembers.bulkCreate(newMembers).success(function(members){
         			var newAppointments = [];
 	        		for (var i = 0; i < body.appointmentEvents.length; i++) {
@@ -61,7 +66,6 @@ module.exports = function(db) {
 	        				ends_at: body.appointmentEvents[i].ends_at
 	        			});
 	        		}
-	        		console.log(" -- createAppointmentEvents -- ", newAppointments);
         			db.Appt.bulkCreate(newAppointments).success(function(appts){
         				Response.success(res, apptGroup);
         			}).error(function(err) {
@@ -74,6 +78,44 @@ module.exports = function(db) {
         		Response.error(res, err, "Did not create an appointment group.")
         	});
 			console.log(" -- createAppointment -- ", req.body);
+        },
+        createNewUsers: function (req, res) {
+            
+            var body = req.body;
+            var newMembers = [];
+            console.log(' -- createNewUsers -- ', body);
+            for (var i = 0; i < body.length; i++) {
+                if (typeof body[i].id == 'object') {
+                    
+                } else {
+                    newMembers.push({
+                        email: body[i].email,
+                        family_name: body[i].lastName,
+                        given_name: body[i].firstName,
+                        created_at: new Date(),
+                        type: req.user.user_id
+                    });
+                }
+            }
+            console.log(' -- createNewUsers -- ', newMembers);
+            if ( newMembers.length > 0) {
+                db.Users.bulkCreate(newMembers).success(function (users) {
+                    db.Users.findAll({where: {type: req.user.user_id}}).success(function (users) {
+                        db.Users.update({type: 0}, {type: req.user.user_id}).success(function(result) {
+                            console.log(" -- createNewUsers -- ", users);
+                            Response.success(res, users);
+                        }).error(function(err) {
+                            Response.error(res, err, "Did not create an appointment group.");
+                        });
+                    }).error(function(err) {
+                        Response.error(res, err, "Did not create an appointment group.");
+                    });
+                }).error(function (err) {
+                    Response.error(res, err, "Did not create an appointment group.");
+                });
+            } else {
+                Response.success(res, []);
+            }
         },
         modifyAppointment: function (req, res) {
         	req.ApptGroup.save().success(function() {
