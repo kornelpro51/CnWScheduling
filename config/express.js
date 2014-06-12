@@ -12,7 +12,6 @@ var express          = require('express')
 //  , cookieParser    = require('cookie-parser')
 //  , session         = require('express-session')
   , middleware      = require('./middlewares/authorization')
-  , MongoStore = require('connect-mongo')(express)
   , MySQLStore = require('./session/express-session-mysql')(express)
 
 module.exports = function( config, app, passport ) {
