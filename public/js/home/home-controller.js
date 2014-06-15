@@ -125,7 +125,7 @@ angular.module('scheduler')
                     }
                 }, function () {
                     console.log('Modal dismissed at: ' + new Date());
-                    window.location.href = "/";
+                    //window.location.href = "/";
                 });
                 //modalInstance.opened.then(function(result) {
                 //    alert(result);
@@ -235,9 +235,6 @@ angular.module('scheduler')
             endTime      : '',
             description  : '',
             notes        : '',
-        }
-        if ($scope.info.types.length > 0) {
-            $scope.newAppointment.type = $scope.info.types[0].appt_type_id;
         }
         if (initialDate instanceof Date) {
             $scope.newAppointment.date = dateFormat($scope.pickupDate, "mm/dd/yyyy");
@@ -378,7 +375,6 @@ angular.module('scheduler')
             if ( newID == oldID ) {
                 return;
             }
-
             if ( typeof newID == 'object' ) {
                 $scope.newAttendee.isNameConfigurable = false;
                 $scope.newAttendee.firstName = newID.given_name;
@@ -397,6 +393,20 @@ angular.module('scheduler')
                 $scope.newAttendee.isNameConfigurable = true;
                 $scope.newAttendee.email = newID;
             }
+        }
+    });
+
+    $scope.$watch('newAppointment.type', function( newType, oldType ) {
+        if (typeof newType != 'undefined' ) {
+            if ( newType === oldType ) {
+                return;
+            }
+            for (var i = 0; i < $scope.info.types.length; i++) {
+                if( $scope.info.types[i].appt_type_id == newType ) {
+                    $scope.newAppointment.title = $scope.info.types[i].title;
+                    $scope.newAppointment.description = $scope.info.types[i].description;
+                }
+            };
         }
     });
     $scope.initFormDirty = function(form) {
