@@ -251,7 +251,10 @@ angular.module('scheduler')
         }
         return toMinutes - fromMinutes;
     }
-
+    $scope.icons = [{"value":"Gear","label":"<i class=\"fa fa-gear\"></i> Gear dfda"},
+    {"value":"Globe","label":"<i class=\"fa fa-globe\"></i> Globe  dff"},
+    {"value":"Heart","label":"<i class=\"fa fa-heart\"></i> Heart  aaa"},
+    {"value":"Camera","label":"<i class=\"fa fa-camera\"></i> Camera ddd"}];
     function convertInfoUsers2Select2 () {
         angular.forEach($scope.info.users, function(user, idx) {
             user.text = user.email;
@@ -260,7 +263,7 @@ angular.module('scheduler')
     }
     function convertInfoUsers2BSTypeahead () {
         angular.forEach($scope.info.users, function(user, idx) {
-            user.label = user.email;
+            user.label = user.email + " (" + user.given_name + ", " + user.family_name + ")";
             user.value = user.email;
         });
     }
@@ -395,6 +398,11 @@ angular.module('scheduler')
             }
         }
     });
+    $scope.$on('$typeahead.select', function(evt, value, id) {
+        if ( typeof value == 'object' ) {
+            $scope.$digest();
+        }
+    });
 
     $scope.$watch('newAppointment.type', function( newType, oldType ) {
         if (typeof newType != 'undefined' ) {
@@ -414,6 +422,8 @@ angular.module('scheduler')
         form.$setPristine();
     }
     $scope.addAttendee = function (form) {
+        //$scope.newAttendee.id = '12345';
+        //return;
         if (form.$valid) {
             var att = jQuery.extend({}, $scope.newAttendee);
             if (typeof $scope.newAttendee.id == 'object') {
