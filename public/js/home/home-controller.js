@@ -125,7 +125,7 @@ angular.module('scheduler')
                     }
                 }, function () {
                     console.log('Modal dismissed at: ' + new Date());
-                    window.location.href = "/";
+                    //window.location.href = "/";
                 });
                 //modalInstance.opened.then(function(result) {
                 //    alert(result);
@@ -236,9 +236,6 @@ angular.module('scheduler')
             description  : '',
             notes        : '',
         }
-        if ($scope.info.types.length > 0) {
-            $scope.newAppointment.type = $scope.info.types[0].appt_type_id;
-        }
         if (initialDate instanceof Date) {
             $scope.newAppointment.date = dateFormat($scope.pickupDate, "mm/dd/yyyy");
         }
@@ -254,7 +251,10 @@ angular.module('scheduler')
         }
         return toMinutes - fromMinutes;
     }
-
+    $scope.icons = [{"value":"Gear","label":"<i class=\"fa fa-gear\"></i> Gear dfda"},
+    {"value":"Globe","label":"<i class=\"fa fa-globe\"></i> Globe  dff"},
+    {"value":"Heart","label":"<i class=\"fa fa-heart\"></i> Heart  aaa"},
+    {"value":"Camera","label":"<i class=\"fa fa-camera\"></i> Camera ddd"}];
     function convertInfoUsers2Select2 () {
         angular.forEach($scope.info.users, function(user, idx) {
             user.text = user.email;
@@ -263,7 +263,7 @@ angular.module('scheduler')
     }
     function convertInfoUsers2BSTypeahead () {
         angular.forEach($scope.info.users, function(user, idx) {
-            user.label = user.email;
+            user.label = user.email + " (" + user.given_name + ", " + user.family_name + ")";
             user.value = user.email;
         });
     }
@@ -378,7 +378,6 @@ angular.module('scheduler')
             if ( newID == oldID ) {
                 return;
             }
-
             if ( typeof newID == 'object' ) {
                 $scope.newAttendee.isNameConfigurable = false;
                 $scope.newAttendee.firstName = newID.given_name;
@@ -399,11 +398,32 @@ angular.module('scheduler')
             }
         }
     });
+    $scope.$on('$typeahead.select', function(evt, value, id) {
+        if ( typeof value == 'object' ) {
+            $scope.$digest();
+        }
+    });
+
+    $scope.$watch('newAppointment.type', function( newType, oldType ) {
+        if (typeof newType != 'undefined' ) {
+            if ( newType === oldType ) {
+                return;
+            }
+            for (var i = 0; i < $scope.info.types.length; i++) {
+                if( $scope.info.types[i].appt_type_id == newType ) {
+                    $scope.newAppointment.title = $scope.info.types[i].title;
+                    $scope.newAppointment.description = $scope.info.types[i].description;
+                }
+            };
+        }
+    });
     $scope.initFormDirty = function(form) {
         console.log("---- initFormDirty ---- ");
         form.$setPristine();
     }
     $scope.addAttendee = function (form) {
+        //$scope.newAttendee.id = '12345';
+        //return;
         if (form.$valid) {
             var att = jQuery.extend({}, $scope.newAttendee);
             if (typeof $scope.newAttendee.id == 'object') {
