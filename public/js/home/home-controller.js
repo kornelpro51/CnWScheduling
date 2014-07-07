@@ -54,11 +54,15 @@ angular.module('scheduler')
             if( Object.prototype.toString.call( data ) === '[object Array]' ) {
                 angular.forEach(data, function(value, key) {
                     value.date = dateFormat(value.starts_at, "mm/dd/yyyy");
+                    value.starts_at = new Date(value.starts_at);
+                    value.ends_at = new Date(value.ends_at);
                     value.startTime = dateFormat(value.starts_at, "hh:MM TT");
                     value.endTime = dateFormat(value.ends_at, "hh:MM TT");
                 })
             } else {
                 data.date = dateFormat(data.starts_at, "mm/dd/yyyy");
+                data.starts_at = new Date(data.starts_at);
+                data.ends_at = new Date(data.ends_at);
                 data.startTime = dateFormat(data.starts_at, "hh:MM TT");
                 data.endTime = dateFormat(data.ends_at, "hh:MM TT");
             }
