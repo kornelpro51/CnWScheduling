@@ -1,169 +1,175 @@
 <div class="container-fluid" ng-init="init()">
-    <div id="#scheduler" ui-calendar="uiConfig.calendar" ng-model="calendarSource" calendar="schedule"></div>
+  <div id="#scheduler" ui-calendar="uiConfig.calendar" ng-model="calendarSource" calendar="schedule"></div>
 </div>
 <script type="text/ng-template" id="viewAppointmentModal.html">
-	<div class="modal-header">
-        <h3 class="modal-title">View your appointment</h3>
+  <div class="modal-header">
+    <h3 class="modal-title">View your appointment</h3>
+  </div>
+  <div class="modal-body">
+    <h4>Appointment Detail</h4>
+
+    <div class="well">
+      <div>Start : {{currentAppointment.date}} {{currentAppointment.startTime}}</div>
+      <div>End : {{currentAppointment.date}} {{currentAppointment.endTime}}</div>
+      <div>Title : {{currentAppointment.title}}</div>
+      <div>Description : {{currentAppointment.description}}</div>
+      <div>Notes : {{currentAppointment.notes}}</div>
     </div>
-    <div class="modal-body">
-    	<h4>Appointment Detail</h4>
-    	<div class="well">
-    		<div>Start : {{currentAppointment.date}} {{currentAppointment.startTime}}</div>
-    		<div>End : {{currentAppointment.date}} {{currentAppointment.endTime}}</div>
-    		<div>Title : {{currentAppointment.title}}</div>
-    		<div>Description : {{currentAppointment.description}}</div>
-    		<div>Notes : {{currentAppointment.notes}}</div>
-    	</div>
-    	<h4>Attendees</h4>
-    	<div class="well">
-    		<div class="row">
-				<div class = "col-xs-4">
-	    			Email
-				</div>
-				<div class = "col-xs-4">
-					First Name
-				</div>
-				<div class = "col-xs-4">
-					Last Name
-				</div>
-			</div>
-			<hr>
-    		<div class="row" ng-repeat="attendee in data.attendees">
-				<div class = "col-xs-4">
-	    			{{attendee.email}}
-				</div>
-				<div class = "col-xs-4">
-					{{attendee.firstName}}
-				</div>
-				<div class = "col-xs-4">
-					{{attendee.lastName}}
-				</div>
-			</div>
-    	</div>
+    <h4>Attendees</h4>
+
+    <div class="well">
+      <div class="row">
+        <div class="col-xs-4">
+          Email
+        </div>
+        <div class="col-xs-4">
+          First Name
+        </div>
+        <div class="col-xs-4">
+          Last Name
+        </div>
+      </div>
+      <hr>
+      <div class="row" ng-repeat="attendee in data.attendees">
+        <div class="col-xs-4">
+          {{attendee.email}}
+        </div>
+        <div class="col-xs-4">
+          {{attendee.firstName}}
+        </div>
+        <div class="col-xs-4">
+          {{attendee.lastName}}
+        </div>
+      </div>
     </div>
-    <div class="modal-footer">
-    	<button class="btn btn-primary btn-warning" ng-click="close()">Close</button>
-	    <button class="btn btn-primary pull-left" ng-click="prevAppointment()" ng-class="{'disabled': currentPos <= 0}">Prev</button>
-	    <button class="btn btn-primary pull-left" ng-click="nextAppointment()" ng-class="{'disabled': currentPos >= endPos}">Next</button>
-    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-primary btn-warning" ng-click="close()">Close</button>
+    <button class="btn btn-primary pull-left" ng-click="prevAppointment()" ng-class="{'disabled': currentPos <= 0}">Prev</button>
+    <button class="btn btn-primary pull-left" ng-click="nextAppointment()" ng-class="{'disabled': currentPos >= endPos}">Next</button>
+  </div>
 </script>
 
 <script type="text/ng-template" id="createAppointmentModal.html">
-    <div class="modal-header">
-        <h3 class="modal-title">{{dlgTitle}}</h3>
+  <div class="modal-header">
+    <h3 class="modal-title">{{dlgTitle}}</h3>
+  </div>
+  <div class="modal-body">
+    <div ng-show="step==0">
+      <h4>Create Group</h4>
+
+      <div class="row" ng-repeat="attendee in data.attendees" ng-class="{'error-row': attendee.hasError}">
+        <form name='editAttendeeForm' novalidate>
+          <div class="p-h-5 col-xs-8">
+            <div class="row" ng-hide="attendee.isNameConfigurable">
+              <div class="col-xs-4">
+                {{attendee.email}}
+              </div>
+              <div class="col-xs-4">
+                {{attendee.firstName}}
+              </div>
+              <div class="col-xs-4">
+                {{attendee.lastName}}
+              </div>
+            </div>
+            <div class="row" ng-show="attendee.isNameConfigurable">
+              <div class="col-xs-4" ng-class="{'has-error': editAttendeeForm.email.$invalid && (editAttendeeForm.email.$dirty ) }">
+                <input type="text" ng-model="attendee.email" name="email" class="form-control" required autocomplete="off">
+              </div>
+              <div class="col-xs-4" ng-class="{'has-error': editAttendeeForm.firstname.$invalid && editAttendeeForm.firstname.$dirty }">
+                <input type="text" ng-model="attendee.firstName" name="firstname" class="form-control" placeholder="First Name" required>
+              </div>
+              <div class="col-xs-4" ng-class="{'has-error': editAttendeeForm.lastname.$invalid && editAttendeeForm.lastname.$dirty }">
+                <input type="text" ng-model="attendee.lastName" name="lastname" class="form-control" placeholder="Last Name" required>
+              </div>
+            </div>
+          </div>
+          <div class="col-xs-4">
+            <!--button class="btn btn-default" ng-click="editAttendee(attendee)"  ng-hide="attendee.editMode">Edit</button-->
+            <!--button class="btn btn-default" ng-click="completeAttendee(editAttendeeForm, attendee)" ng-show="attendee.editMode">Done</button-->
+            <button class="btn btn-default" ng-click="removeAttendee(attendee, $index)">Remove</button>
+          </div>
+        </form>
+      </div>
+      <form class='row' name='newAttendeeForm' id='newAttendeeForm' novalidate>
+        <div class="col-xs-8" ng-init="initFormDirty(newAttendeeForm)">
+          <div class="row">
+            <div class="col-xs-4" ng-class="{'has-error': newAttendeeForm.email.$invalid && newAttendeeForm.email.$dirty }">
+              <input type="text" class="form-control" ng-model="newAttendee.id" name="email" ng-options="user as user.label for user in info.users" placeholder="Enter Email" data-keyboard="true" bs-typeahead required autocomplete="off" ng-show="newAttendee.isNameConfigurable">
+              <span ng-hide="newAttendee.isNameConfigurable">{{newAttendee.email}}</span>
+            </div>
+            <div class="col-xs-4" ng-class="{'has-error': newAttendeeForm.firstname.$invalid && newAttendeeForm.firstname.$dirty }">
+              <input type="text" ng-model="newAttendee.firstName" name="firstname" class="form-control" placeholder="First Name" required ng-show="newAttendee.isNameConfigurable">
+              <span ng-hide="newAttendee.isNameConfigurable">{{newAttendee.firstName}}</span>
+            </div>
+            <div class="col-xs-4" ng-class="{'has-error': newAttendeeForm.lastname.$invalid && newAttendeeForm.lastname.$dirty }">
+              <input type="text" ng-model="newAttendee.lastName" name="lastname" class="form-control" placeholder="Last Name" required ng-show="newAttendee.isNameConfigurable">
+              <span ng-hide="newAttendee.isNameConfigurable">{{newAttendee.lastName}}</span>
+            </div>
+          </div>
+        </div>
+        <div class="col-xs-4">
+          <button class="btn btn-default" ng-click="addAttendee(newAttendeeForm)">Add</button>
+        </div>
+      </form>
+      <div class="alert alert-info alert-dismissable">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        <strong>Tip : </strong> If you can not find a user from dropdown list, type a new user&prime;s email address and press key &Prime;Enter&Prime;.
+      </div>
     </div>
-    <div class="modal-body">
-    	<div ng-show="step==0">
-	        <h4>Create Group</h4>
-        	<div class="row" ng-repeat="attendee in data.attendees" ng-class="{'error-row': attendee.hasError}">
-        		<form name='editAttendeeForm' novalidate >
-        		<div class = "p-h-5 col-xs-8">
-        			<div class="row" ng-hide="attendee.isNameConfigurable">
-        				<div class = "col-xs-4">
-			    			{{attendee.email}}
-						</div>
-						<div class = "col-xs-4">
-							{{attendee.firstName}}
-						</div>
-						<div class = "col-xs-4">
-							{{attendee.lastName}}
-						</div>
-        			</div>
-	       			<div class="row" ng-show="attendee.isNameConfigurable">
-			        	<div class = "col-xs-4" ng-class="{'has-error': editAttendeeForm.email.$invalid && (editAttendeeForm.email.$dirty ) }">
-			    			<input type="text" ng-model="attendee.email" name="email" class="form-control" required autocomplete="off">
-						</div>
-						<div class = "col-xs-4" ng-class="{'has-error': editAttendeeForm.firstname.$invalid && editAttendeeForm.firstname.$dirty }">
-							<input type="text" ng-model="attendee.firstName" name="firstname" class="form-control" placeholder="First Name" required >
-						</div>
-						<div class = "col-xs-4" ng-class="{'has-error': editAttendeeForm.lastname.$invalid && editAttendeeForm.lastname.$dirty }">
-							<input type="text" ng-model="attendee.lastName" name="lastname" class="form-control" placeholder="Last Name" required>
-						</div>
-					</div>
-				</div>
-				<div class = "col-xs-4">
-					<!--button class="btn btn-default" ng-click="editAttendee(attendee)"  ng-hide="attendee.editMode">Edit</button-->
-					<!--button class="btn btn-default" ng-click="completeAttendee(editAttendeeForm, attendee)" ng-show="attendee.editMode">Done</button-->
-					<button class="btn btn-default" ng-click="removeAttendee(attendee, $index)">Remove</button>
-				</div>
-				</form>
-			</div>
-	        <form class='row' name='newAttendeeForm' id='newAttendeeForm' novalidate>
-				<div class = "col-xs-8" ng-init="initFormDirty(newAttendeeForm)">
-	       			<div class="row">
-			        	<div class = "col-xs-4" ng-class="{'has-error': newAttendeeForm.email.$invalid && newAttendeeForm.email.$dirty }">
-			    			<input type="text" class="form-control" ng-model="newAttendee.id" name="email" ng-options="user as user.label for user in info.users" placeholder="Enter Email" data-keyboard="true" bs-typeahead required autocomplete="off">
-						</div>
-						<div class = "col-xs-4" ng-class="{'has-error': newAttendeeForm.firstname.$invalid && newAttendeeForm.firstname.$dirty }">
-							<input type="text" ng-model="newAttendee.firstName" name="firstname" class="form-control" placeholder="First Name" required ng-show="newAttendee.isNameConfigurable">
-							<span ng-hide="newAttendee.isNameConfigurable">{{newAttendee.firstName}}</span>
-						</div>
-						<div class = "col-xs-4" ng-class="{'has-error': newAttendeeForm.lastname.$invalid && newAttendeeForm.lastname.$dirty }">
-							<input type="text" ng-model="newAttendee.lastName" name="lastname" class="form-control" placeholder="Last Name" required ng-show="newAttendee.isNameConfigurable">
-							<span ng-hide="newAttendee.isNameConfigurable">{{newAttendee.lastName}}</span>
-						</div>
-					</div>
-				</div>
-				<div class = "col-xs-4">
-					<button class="btn btn-default" ng-click="addAttendee(newAttendeeForm)">Add</button>
-				</div>
-	        </form>
-	        <div class="alert alert-info alert-dismissable">
-				<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-				<strong>Tip : </strong> If you can not find a user from dropdown list, type a new user&prime;s email address and press key &Prime;Enter&Prime;.
-			</div>
+    <div ng-show="step==1">
+      <h4>Appointment</h4>
+
+      <form class='form' name="appointmentForm">
+        <div class="form-group">
+          <label>Choose the appointment type.</label>
+          <select class="form-control" name="type" ng-class="{'has-error': appointmentForm.type.$invalid && appointmentForm.type.$dirty }" ng-model="newAppointment.type" ng-options="type.appt_type_id as type.title for type in info.types" required placeholder="Type"></select>
         </div>
-        <div ng-show="step==1">
-        	<h4>Appointment</h4>
-        	<form class='form' name="appointmentForm">
-	        	<div class="form-group">
-	        		<label>Choose the appointment type.</label>
-	        		<select class="form-control" name="type"  ng-class="{'has-error': appointmentForm.type.$invalid && appointmentForm.type.$dirty }" ng-model="newAppointment.type" ng-options="type.appt_type_id as type.title for type in info.types" required placeholder="Type"></select>
-	        	</div>
-	        	<div class="form-group" ng-class="{'has-error': appointmentForm.title.$invalid && appointmentForm.title.$dirty }">
-	        		<input type="text" ng-model="newAppointment.title" name="title" class="form-control" placeholder="Title *" required>
-	        	</div>
-	        	<div class="form-group row">
-	        		<div class = "col-xs-3" ng-class="{'has-error': appointmentForm.date.$invalid && appointmentForm.date.$dirty }">
-	        			<input type="text" class="form-control" ng-model="newAppointment.date" name="date" required bs-datepicker data-date-format="MM/dd/yyyy" data-date-type="string" placeholder="Date *" noblank>
-		        	</div>
-		        	<div class = "col-xs-3" ng-class="{'has-error': appointmentForm.starttime.$invalid && appointmentForm.starttime.$dirty }">
-		        		<input type="text" class="form-control" size="8" ng-model="newAppointment.startTime" name="starttime" required bs-timepicker minute-step="1" data-time-type="string" data-time-format='hh:mm a' placeholder="Start Time *" noblank>
-		        	</div>
-		        	<div class = "col-xs-1">
-		        		<label class="control-label">to</label>
-		        	</div>
-		        	<div class = "col-xs-3" ng-class="{'has-error': appointmentForm.endtime.$invalid && appointmentForm.endtime.$dirty }">
-		        		<input type="text" class="form-control" size="8" ng-model="newAppointment.endTime" name="endtime" ng-required bs-timepicker minute-step="1" data-time-type="string" data-time-format='hh:mm a' placeholder="End Time *" noblank>
-		        	</div>
-		        </div>
-	        	<div class="form-group">
-		        	<label>Description</label>
-		        	<textarea  class="form-control" ng-model="newAppointment.description" rows="5" id="description" name="description"></textarea>
-		        </div>
-		        <div class="form-group m-b-0">
-		        	<label>Notes</label>
-		        	<textarea  class="form-control" ng-model="newAppointment.notes" rows="5" id="notes" name="notes"></textarea>
-		        </div>
-	        </form>
+        <div class="form-group" ng-class="{'has-error': appointmentForm.title.$invalid && appointmentForm.title.$dirty }">
+          <input type="text" ng-model="newAppointment.title" name="title" class="form-control" placeholder="Title *" required>
         </div>
+        <div class="form-group row">
+          <div class="col-xs-3" ng-class="{'has-error': appointmentForm.date.$invalid && appointmentForm.date.$dirty }">
+            <input type="text" class="form-control" ng-model="newAppointment.date" name="date" required bs-datepicker data-date-format="MM/dd/yyyy" data-date-type="string" placeholder="Date *" noblank>
+          </div>
+          <div class="col-xs-3" ng-class="{'has-error': appointmentForm.starttime.$invalid && appointmentForm.starttime.$dirty }">
+            <input type="text" class="form-control" size="8" ng-model="newAppointment.startTime" name="starttime" required bs-timepicker minute-step="10" readonly-input="true" data-time-type="string" data-time-format='hh:mm a' placeholder="Start Time *" noblank>
+          </div>
+          <div class="col-xs-1">
+            <label class="control-label">to</label>
+          </div>
+          <div class="col-xs-3" ng-class="{'has-error': appointmentForm.endtime.$invalid && appointmentForm.endtime.$dirty }">
+            <input type="text" class="form-control" size="8" ng-model="newAppointment.endTime" name="endtime" ng-required bs-timepicker minute-step="10" readonly-input="true" data-time-type="string" data-time-format='hh:mm a' placeholder="End Time *" noblank>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea class="form-control" ng-model="newAppointment.description" rows="5" id="description" name="description"></textarea>
+        </div>
+        <div class="form-group m-b-0">
+          <label>Notes</label>
+          <textarea class="form-control" ng-model="newAppointment.notes" rows="5" id="notes" name="notes"></textarea>
+        </div>
+      </form>
     </div>
-    <div class="modal-footer">
-    	<div ng-show="step==0">
-        	<button class="btn btn-primary" ng-click="next()" ng-class="{'disabled': data.attendees.length <= 0}">Next</button>
-        	<button class="btn btn-warning" ng-click="cancel()">Cancel</button>
-        </div>
-        <div ng-hide="step==0">
-        	<button class="btn btn-primary" ng-click="done(appointmentForm)" ng-class="">Done</button>
-        	<button class="btn btn-primary" ng-click="addAnother(appointmentForm)" ng-class="">Add another step</button>
-        	<button class="btn btn-warning" ng-click="cancel()">Cancel</button>
-        </div>
+  </div>
+  <div class="modal-footer">
+    <div ng-show="step==0">
+      <button class="btn btn-primary" ng-click="next()" ng-class="{'disabled': data.attendees.length <= 0}">Next</button>
+      <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
     </div>
+    <div ng-hide="step==0">
+      <button class="btn btn-primary" ng-click="done(appointmentForm, false)" ng-class="">Done</button>
+      <button class="btn btn-primary" ng-click="done(appointmentForm, true)" ng-class="">Done (Discard current)</button>
+      <button class="btn btn-primary" ng-click="addAnother(appointmentForm)" ng-class="">Add another step</button>
+      <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
+    </div>
+  </div>
 </script>
 
 <script type="text/ng-template" id="customTemplate.html">
   <a>
-      <img ng-src="http://upload.wikimedia.org/wikipedia/commons/thumb/{{match.model.flag}}" width="16">
-      <span bind-html-unsafe="match.label | typeaheadHighlight:query"></span>
+    <img ng-src="http://upload.wikimedia.org/wikipedia/commons/thumb/{{match.model.flag}}" width="16">
+    <span bind-html-unsafe="match.label | typeaheadHighlight:query"></span>
   </a>
 </script>

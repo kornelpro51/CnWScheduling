@@ -39,7 +39,7 @@ angular.module('scheduler')
         }
 
         function convertToDBFormat(data) {
-            if( Object.prototype.toString.call( data ) === '[object Array]' ) { 
+            if( Object.prototype.toString.call( data ) === '[object Array]' ) {
                 angular.forEach(data, function(value, key) {
                     value.starts_at = new Date(value.date + " " + value.startTime);
                     value.ends_at = new Date(value.date + " " + value.endTime);
@@ -83,7 +83,7 @@ angular.module('scheduler')
         $scope.alertDayClick = function (date, allDay, jsEvent, view, target) {
             $scope.openWizard(date);
         }
-        
+
         $scope.openWizard = function(date, initialData) {
             if (typeof initialData == 'undefined') {
                 var modalInstance = $modal.open({
@@ -91,13 +91,13 @@ angular.module('scheduler')
                   controller: 'CreateAppointmentCtrl',
                   size: 'lg',
                   resolve: {
-                    paramUsers: function () { 
+                    paramUsers: function () {
                         var pr = AppointmentService.getUserList();
                         return pr;
                     },
                     paramTypes: function () {
                         var pr = AppointmentService.getApptTypeList();
-                        return pr; 
+                        return pr;
                     },
                     pickupDate: function() { return date; },
                     initialData: function () { return initialData; }
@@ -139,13 +139,13 @@ angular.module('scheduler')
                     controller: 'ViewAppointmentCtrl',
                     size: 'lg',
                     resolve: {
-                        paramUsers: function () { 
+                        paramUsers: function () {
                             var pr = AppointmentService.getUserList();
                             return pr;
                         },
                         paramTypes: function () {
                             var pr = AppointmentService.getApptTypeList();
-                            return pr; 
+                            return pr;
                         },
                         pickupDate: function() { return date; },
                         initialData: function () { return initialData; }
@@ -157,9 +157,9 @@ angular.module('scheduler')
 
 angular.module('scheduler')
     .controller('CreateAppointmentCtrl', ['$scope', '$modalInstance', 'paramUsers', 'paramTypes', 'pickupDate', 'initialData', 'AppointmentService', function ($scope, $modalInstance, paramUsers, paramTypes, pickupDate, initialData, AppointmentService) {
-    $scope.step = 0;    
+    $scope.step = 0;
     $scope.pickupDate = pickupDate;
-    
+
     $scope.info = {
         users: [],
         types: []
@@ -192,13 +192,13 @@ angular.module('scheduler')
 
 
     $scope.select2Options = {
-        createSearchChoice:function(term, data) { 
-            if ($(data).filter(function() { 
-                    return this.text.localeCompare(term)===0; 
+        createSearchChoice:function(term, data) {
+            if ($(data).filter(function() {
+                    return this.text.localeCompare(term)===0;
                 }).length===0) {
 
                 return {id:term, text:term};
-            } 
+            }
         },
         'multiple': false,
         'data': $scope.info.users
@@ -216,7 +216,7 @@ angular.module('scheduler')
             $scope.info.types = jQuery.extend($scope.info.types, paramTypes.data.result);
         }
     }
-    
+
     function ResetAttendee () {
         $scope.newAttendee = {
             email : '',
@@ -285,7 +285,7 @@ angular.module('scheduler')
                 userInfo = user;
             }
         });
-        return userInfo;   
+        return userInfo;
     }
 
     function getCustomizedUserInfo (userId) {
@@ -295,7 +295,7 @@ angular.module('scheduler')
                 userInfo = user;
             }
         });
-        return userInfo;   
+        return userInfo;
     }
 
     function initializeData() {
@@ -311,6 +311,12 @@ angular.module('scheduler')
             $scope.dlgTitle = "Edit your appointment.";
         } else {
             $scope.dlgTitle = "Create your appointment.";
+          var startTime = new Date();
+          startTime.setMinutes(0);
+          $scope.newAppointment.startTime = startTime.format("hh:MM TT");
+          var endTime = new Date();
+          endTime.setMinutes(30);
+          $scope.newAppointment.endTime = endTime.format("hh:MM TT");
         }
     }
 
@@ -331,7 +337,10 @@ angular.module('scheduler')
     };
 
     $scope.cancel = function () {
-        $modalInstance.dismiss('cancel');
+      $modalInstance.dismiss('cancel');
+    };
+    $scope.reset = function (form) {
+      form.$setPpristine();
     };
     $scope.next = function() {
         var isDuplicatedUserExist = false;
@@ -369,7 +378,7 @@ angular.module('scheduler')
             alert("Please add attendees.")
         }
     };
-    
+
 
     // ----------------------------------------------
 
@@ -383,6 +392,15 @@ angular.module('scheduler')
                 $scope.newAttendee.firstName = newID.given_name;
                 $scope.newAttendee.lastName = newID.family_name;
                 $scope.newAttendee.email = newID.email;
+                var att = jQuery.extend({}, $scope.newAttendee);
+                att.firstName = $scope.newAttendee.id.given_name;
+                att.lastName = $scope.newAttendee.id.family_name;
+                att.email = $scope.newAttendee.id.email;
+                att.user_id = $scope.newAttendee.id.user_id;
+                $('#newAttendeeForm').find('input[name="email"]').focus();
+                $scope.data.attendees.push(att);
+                $scope.myform.$setPristine();
+                ResetAttendee();
             } else {
                 for(var idx in $scope.info.users) {
                     if (newID == $scope.info.users[idx].email ) {
@@ -420,6 +438,7 @@ angular.module('scheduler')
     $scope.initFormDirty = function(form) {
         console.log("---- initFormDirty ---- ");
         form.$setPristine();
+      $scope.myform = form;
     }
     $scope.addAttendee = function (form) {
         //$scope.newAttendee.id = '12345';
@@ -482,7 +501,11 @@ angular.module('scheduler')
 
     // -----------------------------------------------
 
-    $scope.done = function(form) {
+    $scope.done = function(form, discardCurrent) {
+        if(discardCurrent) {
+          $modalInstance.close($scope.data);
+          return;
+        }
         if (form.$valid) {
             if (calcMinutesDiff($scope.newAppointment.startTime, $scope.newAppointment.endTime) < 10) {
                 alert("The appointment duration should be larger than 10 minuets.")
@@ -522,7 +545,7 @@ angular.module('scheduler')
             form.endtime.$dirty = true;
             alert("Please input required fields.");
         }
-    }    
+    }
 
     $scope.tooltip = {
         "title": "Hello Tooltip<br />This is a multiline message!",
@@ -532,7 +555,7 @@ angular.module('scheduler')
 
 angular.module('scheduler')
     .controller('ViewAppointmentCtrl', ['$scope', '$modalInstance', 'paramUsers', 'paramTypes', 'pickupDate', 'initialData', function ($scope, $modalInstance, paramUsers, paramTypes, pickupDate, initialData) {
-    
+
     $scope.currentAppointment = null;
     $scope.currentPos = 0;
     $scope.endPos = 0;
@@ -563,7 +586,7 @@ angular.module('scheduler')
                 userInfo = user;
             }
         });
-        return userInfo;   
+        return userInfo;
     }
 
     function InitializeData() {
