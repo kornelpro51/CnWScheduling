@@ -29,8 +29,13 @@ module.exports = function(db) {
 	        		{ model: db.Appt, as: 'appointmentEvents' }
         		] }).success(function(groups) {
 
-				Response.success(res, groups);
+                db.Users.findAll({attributes: ['user_id', 'given_name', 'family_name', 'email']}).success(function(users) {
 
+                    Response.success(res, {groups: groups, users: users});
+                    
+                }).error(function(err) {
+                    Response.error(res, err, "Can not get users list.");
+                });
 			}).error(function(err) {
 				Response.error(res, err, "Can not get appointment groups.");
 			});

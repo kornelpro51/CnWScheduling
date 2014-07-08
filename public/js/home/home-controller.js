@@ -21,14 +21,42 @@ angular.module('scheduler')
 
         $scope.calendarSource = [];
         $scope.appointmentInfos = [];
+        $scope.userInfos = [];
+
+        function getUserNameById(userid) {
+            var user = null;
+            for (var idx in $scope.userInfos) {
+                if ($scope.userInfos[idx].user_id == userid) {
+                    user = $scope.userInfos[idx];
+                    break;
+                }
+            }
+            return user.given_name + " " + user.family_name;
+        }
 
         function createFullcalendarEvent(data) {
             //$scope.calendarSource.push(data);
             var calEvent = {};
+            var eventLabel = "";
             calEvent.events = [];
+            if (data.attendees.length > 1) {
+                if (typeof data.attendees[0].firstName == "string") {
+                    eventLabel = data.attendees[0].firstName + " " + data.attendees[0].lastName + " ...";
+                } else {
+                    eventLabel = getUserNameById(data.attendees[0].user_id) + " ...";
+                }
+            } else if (data.attendees.length > 0) {
+                if (typeof data.attendees[0].firstName == "string") {
+                    eventLabel = data.attendees[0].firstName + " " + data.attendees[0].lastName;
+                } else {
+                    eventLabel = getUserNameById(data.attendees[0].user_id);
+                }
+            } else {
+                return;
+            }
             angular.forEach(data.appointmentEvents, function(evt, key) {
                 calEvent.events.push({
-                    title: evt.title,
+                    title: eventLabel,
                     start: evt.starts_at,
                     end: evt.ends_at,
                     allDay: false
@@ -70,7 +98,8 @@ angular.module('scheduler')
 
         $scope.init = function () {
             AppointmentService.getApptGroupList().then(function(data) {
-                $scope.appointmentInfos = data.data.result;
+                $scope.appointmentInfos = data.data.result.groups;
+                $scope.userInfos = data.data.result.users;
                 angular.forEach($scope.appointmentInfos, function(value, key) {
                     convertFromDBFormat(value.appointmentEvents);
                     createFullcalendarEvent(value);
