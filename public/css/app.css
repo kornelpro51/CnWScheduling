@@ -51,3 +51,20 @@ body {
 .error-row {
 	background-color: #FFDDDD;
 }
+
+.min-dialog .form-group{
+	margin-bottom: 5px;
+
+}
+.min-dialog .modal-footer {
+	padding-top:5px;
+	margin-top: 0;
+}
+.min-dialog .modal-body {
+	padding-top:5px;
+	padding-bottom:5px;
+}
+.min-dialog .modal-header {
+	padding-bottom:5px;
+	padding-bottom:5px;
+}

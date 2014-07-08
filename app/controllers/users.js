@@ -47,6 +47,7 @@ module.exports = function(db, passport) {
 				});
 
 			}).error(function(err) {
+                console.error(' ** signup error ** ', err);
 				return res.render('auth/signup', lodash.extend({ title: 'Scheduler - signup',  error: err},param));
 			})
         }

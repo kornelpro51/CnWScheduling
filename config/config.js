@@ -7,9 +7,9 @@ module.exports = {
 		viewPath     : 'app/views'
 	},
 	db : {
-		host         : '127.0.0.1',
-		user         : 'root',
-		//password     : 'root',
+		host         : '192.168.0.199',
+		user         : 'mybeeble',
+		password     : 'password',
 		database     : 'scheduler',
 		port         : "3306",
 		wait_timeout : 1000
