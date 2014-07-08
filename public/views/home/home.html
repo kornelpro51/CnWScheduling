@@ -118,12 +118,14 @@
       </div>
     </div>
     <div ng-show="step==1">
-      <h4>Appointment</h4>
-
       <form class='form' name="appointmentForm">
+        <h4>Appointment</h4>
         <div class="form-group">
-          <label>Choose the appointment type.</label>
-          <select class="form-control" name="type" ng-class="{'has-error': appointmentForm.type.$invalid && appointmentForm.type.$dirty }" ng-model="newAppointment.type" ng-options="type.appt_type_id as type.title for type in info.types" required placeholder="Type"></select>
+          <select class="form-control" name="type" ng-class="{'has-error': appointmentForm.type.$invalid && appointmentForm.type.$dirty }" ng-model="newAppointment.type" ng-options2="type.appt_type_id as type.title for type in info.types" placeholder="Type">
+              <option value='' disabled selected style='display: none;'>Choose the appointment type.</option>
+              <option ng-repeat="type in info.types" value="{{type.appt_type_id}}">{{type.title}}</option>
+              
+          </select>
         </div>
         <div class="form-group" ng-class="{'has-error': appointmentForm.title.$invalid && appointmentForm.title.$dirty }">
           <input type="text" ng-model="newAppointment.title" name="title" class="form-control" placeholder="Title *" required>
@@ -144,11 +146,11 @@
         </div>
         <div class="form-group">
           <label>Description</label>
-          <textarea class="form-control" ng-model="newAppointment.description" rows="5" id="description" name="description"></textarea>
+          <textarea class="form-control" ng-model="newAppointment.description" rows="4" id="description" name="description"></textarea>
         </div>
         <div class="form-group m-b-0">
           <label>Notes</label>
-          <textarea class="form-control" ng-model="newAppointment.notes" rows="5" id="notes" name="notes"></textarea>
+          <textarea class="form-control" ng-model="newAppointment.notes" rows="4" id="notes" name="notes"></textarea>
         </div>
       </form>
     </div>

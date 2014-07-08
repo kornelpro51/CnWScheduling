@@ -92,6 +92,7 @@ angular.module('scheduler')
             if (typeof initialData == 'undefined') {
                 var modalInstance = $modal.open({
                   templateUrl: 'createAppointmentModal.html',
+                  windowClass: 'min-dialog',
                   controller: 'CreateAppointmentCtrl',
                   size: 'lg',
                   resolve: {
