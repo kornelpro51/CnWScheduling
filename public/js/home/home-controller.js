@@ -1,8 +1,9 @@
 angular.module('scheduler')
     .controller('HomeController', ['$scope', '$location', '$injector','$modal', 'AppointmentService', function ($scope, $location, $injector, $modal, AppointmentService) {
+        var calendarHeight = getCalendarHeight();
         $scope.uiConfig = {
             calendar: {
-                height: 450,
+                height: calendarHeight,
                 editable: false,
                 selectable: true,
                 header: {
@@ -16,6 +17,12 @@ angular.module('scheduler')
                 dayClick: function(date, allDay, jsEvent, view) {
                     $scope.alertDayClick(date, allDay, jsEvent, view, this);
                 },
+                viewRender: function(view, element) {
+                    console.log("view changed", view.visStart, view.visEnd, view.start, view.end);
+                },
+                windowResize: function( view) {
+                    console.log("resize event fired");
+                }
             }
         }
 
@@ -23,6 +30,15 @@ angular.module('scheduler')
         $scope.appointmentInfos = [];
         $scope.userInfos = [];
 
+        $(window).unbind('resize').bind('resize', function() {
+            $scope.schedule.fullCalendar('option', 'height', getCalendarHeight());
+        }).unbind('orientationchange').bind('orientationchange', function() {            
+            $scope.schedule.fullCalendar('option', 'height', getCalendarHeight());
+        });
+
+        function getCalendarHeight() {
+            return Math.max(300, $(window).height() - 80);
+        }
         function getUserNameById(userid) {
             var user = null;
             for (var idx in $scope.userInfos) {
