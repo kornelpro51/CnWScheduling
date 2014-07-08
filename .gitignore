@@ -35,3 +35,5 @@ tasks.xml
 *.swp
 *~
 
+config/config.js
+config/config.json
