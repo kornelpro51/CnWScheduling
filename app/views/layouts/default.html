@@ -23,11 +23,6 @@
 
      <!-- Collect the nav links, forms, and other content for toggling -->
      <div class="collapse navbar-collapse navbar-ex1-collapse">
-        <ul class="nav navbar-nav">
-          <li><a href="/home">Home</a></li>
-          <li><a href="/scheduler">Scheduler</a></li>
-          <li><a href="/contact">Contact Us</a></li>
-        </ul>
         {% if !user %}
         <form class="navbar-form navbar-right" role="login" method="POST" action="/login">
           <div class="form-group col-xs-4">
@@ -43,7 +38,7 @@
         {% else %}
         <ul class="nav navbar-nav navbar-right">
           <li class="dropdown">
-            <a href="#" class="dropdown-toggle" data-toggle="dropdown">{{user.name}} <b class="caret"></b></a>
+            <a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown">{{user.name}} <b class="caret"></b></a>
             <ul class="dropdown-menu">
               <li><a href="#">Profile</a></li>
               <li class="divider"></li>

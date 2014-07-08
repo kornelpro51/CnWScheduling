@@ -1,5 +1,5 @@
 body {
-  margin-top: 60px;
+  margin-top: 45px;
   padding: 10px;
   background-color: #ECF0F1;
 }
@@ -67,4 +67,21 @@ body {
 .min-dialog .modal-header {
 	padding-bottom:5px;
 	padding-bottom:5px;
+}
+
+.navbar-brand {
+	height: 35px;
+	padding: 7px 15px;
+	font-size: 16px;
+	line-height: 20px;
+}
+
+@media (min-width: 768px) {
+	.navbar .navbar-nav > li > a {
+		padding-top: 7px;
+		padding-bottom: 7px;
+	}
+}
+.navbar {
+	min-height: 35px;
 }
