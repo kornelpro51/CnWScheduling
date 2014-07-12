@@ -157,7 +157,7 @@ angular.module('scheduler')
                 modalInstance.result.then(function (appt) {
                     convertToDBFormat(appt.appointmentEvents);
                     if (typeof appt.appt_group_id == "undefined") { // new appointment is created.
-                        AppointmentService.createAppointment(appt).then(function(result) {
+                        AppointmentService.createApptGroup(appt).then(function(result) {
                             if ( result.data && result.data.success) {
                                 appt.appt_group_id = result.data.result.appt_group_id;
                             }
@@ -187,6 +187,7 @@ angular.module('scheduler')
                 var modalInstance = $modal.open({
                     templateUrl: 'viewAppointmentModal.html',
                     controller: 'ViewAppointmentCtrl',
+                    windowClass: 'min-dialog',
                     size: 'lg',
                     resolve: {
                         paramUsers: function () {
@@ -604,7 +605,7 @@ angular.module('scheduler')
 }]);
 
 angular.module('scheduler')
-    .controller('ViewAppointmentCtrl', ['$scope', '$modalInstance', 'paramUsers', 'paramTypes', 'pickupDate', 'initialData', function ($scope, $modalInstance, paramUsers, paramTypes, pickupDate, initialData) {
+    .controller('ViewAppointmentCtrl', ['$scope', '$timeout', '$modalInstance', 'AppointmentService', 'paramUsers', 'paramTypes', 'pickupDate', 'initialData', function ($scope, $timeout, $modalInstance, AppointmentService, paramUsers, paramTypes, pickupDate, initialData) {
 
     $scope.currentAppointment = null;
     $scope.currentPos = 0;
@@ -619,6 +620,11 @@ angular.module('scheduler')
         users: [],
         types: []
     }
+    $scope.notify = {
+        visible : false,
+        message : ''
+    }
+    $scope.viewmode = 'view';
 
     function LoadInformations () {
         if ( paramUsers.status == 200 && paramUsers.data.success ) {
@@ -656,8 +662,34 @@ angular.module('scheduler')
         }
     }
 
+    function convertToDBFormat(data) {
+        if( Object.prototype.toString.call( data ) === '[object Array]' ) {
+            angular.forEach(data, function(value, key) {
+                value.starts_at = new Date(value.date + " " + value.startTime);
+                value.ends_at = new Date(value.date + " " + value.endTime);
+            })
+        } else {
+            data.starts_at = new Date(data.date + " " + data.startTime);
+            data.ends_at = new Date(data.date + " " + data.endTime);
+        }
+    }
+
     LoadInformations();
     InitializeData();
+
+    $scope.$watch('newAppointment.type', function( newType, oldType ){
+        if (typeof newType != 'undefined' ) {
+            if ( newType === oldType ) {
+                return;
+            }
+            for (var i = 0; i < $scope.info.types.length; i++) {
+                if( $scope.info.types[i].appt_type_id == newType ) {
+                    $scope.newAppointment.title = $scope.info.types[i].title;
+                    $scope.newAppointment.description = $scope.info.types[i].description;
+                }
+            };
+        }
+    });
 
     $scope.nextAppointment = function() {
         if ( $scope.currentPos < $scope.endPos ) {
@@ -670,6 +702,56 @@ angular.module('scheduler')
             $scope.currentPos = $scope.currentPos - 1;
             $scope.currentAppointment = $scope.data.appointmentEvents[$scope.currentPos];
         }
+    }
+    
+    $scope.changeDlgMode = function ( mode ) {
+        $scope.viewmode = mode;
+        if ($scope.viewmode == 'edit_appt') {
+            delete $scope.currentAppointment.type;
+            $scope.newAppointment = angular.extend({}, $scope.currentAppointment);
+        } else if ( $scope.viewmode == 'edit_att' ) {
+
+        } else if ($scope.viewmode == 'view') {
+            delete $scope.newAppointment;
+        }
+    }
+    function showNotification(msg, d) {
+        var delay = d || 3000;
+        $scope.notify.visible = true;
+        $scope.notify.message = msg;
+        $timeout(function() {
+            $scope.notify.visible = false;
+        }, delay);
+    }
+
+    $scope.SaveAppointment = function ( mode ) {
+        convertToDBFormat($scope.newAppointment);
+        AppointmentService.modifyAppointment($scope.data.appt_group_id, $scope.currentAppointment.appt_id, $scope.newAppointment).then(function(result) {
+            if(result.data.success) {
+                angular.extend($scope.currentAppointment, $scope.newAppointment);
+                showNotification('The appointment was saved successfully.');
+                if (mode) {
+                    $scope.changeDlgMode('view');
+                }
+            } else {
+                showNotification('Appointment is not saved.');
+            }
+        }, function(reason) {
+            console.error(reason);
+            alert('Failed on save appointment');
+        });
+    }
+    $scope.DeleteAppointmentGroup = function() {
+        AppointmentService.deleteApptGroup($scope.data.appt_group_id).then(function(result) {
+            if( result.data.success) {
+                $modalInstance.dismiss('cancel');
+            } else {
+                alert(result.data.msg);
+            }
+        }, function(reason) {
+            console.error(reason);
+            alert('Failed on delete of the appointment group.');
+        });
     }
     $scope.close = function () {
         $modalInstance.dismiss('cancel');

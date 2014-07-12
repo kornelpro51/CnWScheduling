@@ -68,6 +68,10 @@ body {
 	padding-bottom:5px;
 	padding-bottom:5px;
 }
+.min-dialog .alert {
+	margin: 0;
+	padding: 5px 20px;
+}
 
 .navbar-brand {
 	height: 35px;

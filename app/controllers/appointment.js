@@ -43,7 +43,7 @@ module.exports = function(db) {
 
         //-------------------------------------------------------------
 
-        createAppointment: function (req, res) {
+        createAppointmentGroup: function (req, res) {
         	var body = req.body;
         	db.ApptGroup.create({created_at: new Date(), created_by: req.user.user_id}).success(function (apptGroup) {
         		var newMembers = [];
@@ -84,8 +84,27 @@ module.exports = function(db) {
         	});
 			console.log(" -- createAppointment -- ", req.body);
         },
-        createNewUsers: function (req, res) {
+        createAppointment: function (req, res) {
+            var body = req.body;
+            var apptGroupId = req.params.apptsId;
             
+            var newAppointment = {
+                appt_group_id: apptGroupId,
+                user_id: body.user_id,
+                title: body.title,
+                description: body.description,
+                notes: body.notes,
+                created_at: new Date(),
+                starts_at: body.starts_at,
+                ends_at: body.ends_at
+            };
+            db.Appt.create(newAppointment).success(function(appt){
+                Response.success(res, appt);
+            }).error(function(err) {
+                Response.error(res, err, "Did not create an appointments.")
+            });
+        },
+        createNewUsers: function (req, res) {
             var body = req.body;
             var newMembers = [];
             console.log(' -- createNewUsers -- ', body);
@@ -122,30 +141,90 @@ module.exports = function(db) {
                 Response.success(res, []);
             }
         },
-        modifyAppointment: function (req, res) {
-        	req.ApptGroup.save().success(function() {
-        		Response.success();
-        	}).error(function (err) {
-        		Response.error(res, err, "Did not update this appointment.");
-        	});
+        getAppointmentGroup: function (req, res) {
+        	Response.success(res, res.apptGroup);
         },
         getAppointment: function (req, res) {
-        	db.ApptGroup.create({created_at: new Date(), created_by: req.user.user_id}).success(function (apptGroup) {
-        		Response.success(res, apptGroup);
-        	}).error(function (err) {
-        		Response.error(res, err, "Did not create an appointment group.")
-        	});
+            Response.success(res, res.appointment);
         },
+        modifyAppointment: function (req, res) {
+            var body = req.body;
+            req.appointment.title = body.title;
+            req.appointment.description = body.description;
+            req.appointment.notes = body.notes;
+            req.appointment.starts_at = body.starts_at;
+            req.appointment.ends_at = body.ends_at;
 
+            req.appointment.save().success(function(appt) {
+                Response.success(res, appt);
+            }).error(function (err) {
+                Response.error(res, err, "Did not update this appointment.");
+            });
+        },
+        deleteAppointmentGroup: function(req, res) {
+            var apptGroupId = req.params.apptsId;
+            db.Appt.destroy({appt_group_id : apptGroupId}).then(function(members){
+                db.ApptGroupMembers.destroy({appt_group_id : apptGroupId}).then(function(appts) {
+                    req.apptGroup.destroy().then(function() {
+                        Response.success(res, 'delete success');
+                    }).error(function(err) {
+                        Response.error(res, err, "Did not delete this appointment group.");
+                    });
+                }).error(function(err) {
+                    Response.error(res, err, "Did not delete this appointment group.");
+                });
+            }).error(function(err) {
+                Response.error(res, err, "Did not delete this appointment group.");
+            });
+        },
+        deleteAppointment: function(req, res) {
+            req.appointment.destroy().success(function() {
+                Response.success(res, 'The appointment is destroyed successfully.');
+            }).error(function(err) {
+                Response.error(res, err, 'The appointment is not destroyed. please refer server side log.')
+            });
+        },
+        modifyApptGroupUsers: function(req, res) {
+            var body = req.body;
+            var newMembers = [];
+            for (var i = 0; i < body.attendees.length; i++) {
+                if (body.attendees[i].is_new) {
+                    
+                } else {
+                    newMembers.push({
+                        appt_group_id: apptGroup.get('appt_group_id'),
+                        user_id: body.attendees[i].user_id
+                    });
+                }
+            }
+            db.ApptGroupMembers.destroy({appt_group_id: req.params.apptsId}).success(function() {
+                db.ApptGroupMembers.bulkCreate(newMembers).success(function(members){
+                    Response.success(res, 'Appointment Group members updated successfully.');
+                }).error(function(err) {
+                    Response.error(res, err, "Did not create an appointment members.")
+                })
+            }).error(function(err) {
+                 Response.error(res, err, "Did not create an appointment members.")
+            })
+        },
+        
         //---------------------------------------------------------------
 
-        apptId: function (req, res, next, id) {
-        	db.ApptGroup.find().success(function ( apptGroup ) {
+        apptsId: function (req, res, next, id) {
+        	db.ApptGroup.find({where:{appt_group_id : req.params.apptsId}}).success(function ( apptGroup ) {
         		req.apptGroup = apptGroup;
         		next();
         	}).error( function (err) {
         		next(err);
         	})
+        },
+        apptId: function (req, res, next, id) {
+            db.Appt.find({where:{appt_id : req.params.apptId}}).success(function ( appt ) {
+                req.appointment = appt;
+                next();
+            }).error( function (err) {
+                next(err);
+            })
         }
 	};
 }
