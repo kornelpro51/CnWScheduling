@@ -140,7 +140,7 @@ angular.module('scheduler')
         $scope.$on('refreshAppointment', function(event, apptGroupId) {
             console.log(' ** refreshAppointment ** ');
             $scope.calendarSource.splice(0,$scope.calendarSource.length);
-            initialize();
+            initialize($scope.viewportDates);
         });
 
         $scope.alertEventClick = function (calEvent, jsEvent, view, target) {
