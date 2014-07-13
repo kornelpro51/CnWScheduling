@@ -109,16 +109,16 @@ module.exports = function(db) {
             var newMembers = [];
             console.log(' -- createNewUsers -- ', body);
             for (var i = 0; i < body.length; i++) {
-                if (typeof body[i].id == 'object') {
-                    
-                } else {
+                if (body[i].user_id == null || typeof body[i].user_id == 'undefined') {
                     newMembers.push({
                         email: body[i].email,
-                        family_name: body[i].lastName,
-                        given_name: body[i].firstName,
+                        family_name: body[i].family_name,
+                        given_name: body[i].given_name,
                         created_at: new Date(),
                         type: req.user.user_id
                     });
+                } else {
+                    
                 }
             }
             console.log(' -- createNewUsers -- ', newMembers);
@@ -129,13 +129,13 @@ module.exports = function(db) {
                             console.log(" -- createNewUsers -- ", users);
                             Response.success(res, users);
                         }).error(function(err) {
-                            Response.error(res, err, "Did not create an appointment group.");
+                            Response.error(res, err, "Did not create users for an appointment group.");
                         });
                     }).error(function(err) {
-                        Response.error(res, err, "Did not create an appointment group.");
+                        Response.error(res, err, "Did not create users for an appointment group.");
                     });
                 }).error(function (err) {
-                    Response.error(res, err, "Did not create an appointment group.");
+                    Response.error(res, err, "Did not create users for an appointment group.");
                 });
             } else {
                 Response.success(res, []);
@@ -163,9 +163,9 @@ module.exports = function(db) {
         },
         deleteAppointmentGroup: function(req, res) {
             var apptGroupId = req.params.apptsId;
-            db.Appt.destroy({appt_group_id : apptGroupId}).then(function(members){
-                db.ApptGroupMembers.destroy({appt_group_id : apptGroupId}).then(function(appts) {
-                    req.apptGroup.destroy().then(function() {
+            db.Appt.destroy({appt_group_id : apptGroupId}).success(function(members){
+                db.ApptGroupMembers.destroy({appt_group_id : apptGroupId}).success(function(appts) {
+                    req.apptGroup.destroy().success(function() {
                         Response.success(res, 'delete success');
                     }).error(function(err) {
                         Response.error(res, err, "Did not delete this appointment group.");
@@ -186,23 +186,22 @@ module.exports = function(db) {
         },
         modifyApptGroupUsers: function(req, res) {
             var body = req.body;
+            var apptGroupId = req.params.apptsId;
             var newMembers = [];
-            for (var i = 0; i < body.attendees.length; i++) {
-                if (body.attendees[i].is_new) {
-                    
-                } else {
+            for (var i = 0; i < body.length; i++) {
+                if (body[i].user_id != null && typeof body[i].user_id != 'undefined') {
                     newMembers.push({
-                        appt_group_id: apptGroup.get('appt_group_id'),
-                        user_id: body.attendees[i].user_id
+                        appt_group_id: apptGroupId,
+                        user_id: body[i].user_id
                     });
                 }
             }
-            db.ApptGroupMembers.destroy({appt_group_id: req.params.apptsId}).success(function() {
+            db.ApptGroupMembers.destroy({appt_group_id: apptGroupId}).success(function(result) {
                 db.ApptGroupMembers.bulkCreate(newMembers).success(function(members){
                     Response.success(res, 'Appointment Group members updated successfully.');
                 }).error(function(err) {
                     Response.error(res, err, "Did not create an appointment members.")
-                })
+                });
             }).error(function(err) {
                  Response.error(res, err, "Did not create an appointment members.")
             })

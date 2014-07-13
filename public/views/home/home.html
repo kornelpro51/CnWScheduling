@@ -4,15 +4,15 @@
 <script type="text/ng-template" id="viewAppointmentModal.html">
   <div class="modal-header">
     <div class="clearfix">
-      <h3 class="modal-title col-xs-4">View your appointment</h3>
-      <div ng-show="notify.visible" class="col-xs-8">
-        <div class="alert alert-info">{{notify.message}}</div>
-      </div>
+      <h3 class="modal-title">View your appointment ( {{currentPos+1}}/{{endPos+1}} )</h3>
     </div>
   </div>
   <div class="modal-body">
+    <div ng-show="notify.visible">
+        <div class="alert alert-info">{{notify.message}}</div>
+    </div>
     <div ng-show="viewmode=='view'">
-      <h4>Appointment Detail</h4> <button class="btn btn-success" ng-click="changeDlgMode('edit_appt')">Edit</button>
+      <h4 class="pull-left">Appointment Detail&nbsp;&nbsp;&nbsp;</h4> <button class="btn btn-success" ng-click="changeDlgMode('edit_appt')">Edit</button>
 
       <div class="well">
         <div>Start : {{currentAppointment.date}} {{currentAppointment.startTime}}</div>
@@ -21,7 +21,7 @@
         <div>Description : {{currentAppointment.description}}</div>
         <div>Notes : {{currentAppointment.notes}}</div>
       </div>
-      <h4>Attendees</h4> <button class="btn btn-success" ng-click="changeDlgMode('edit_att')">Edit</button>
+      <h4 class="pull-left">Attendees&nbsp;&nbsp;&nbsp;</h4> <button class="btn btn-success" ng-click="changeDlgMode('edit_att')">Edit</button>
 
       <div class="well">
         <div class="row">
@@ -41,10 +41,10 @@
             {{attendee.email}}
           </div>
           <div class="col-xs-4">
-            {{attendee.firstName}}
+            {{attendee.given_name}}
           </div>
           <div class="col-xs-4">
-            {{attendee.lastName}}
+            {{attendee.family_name}}
           </div>
         </div>
       </div>
@@ -86,7 +86,7 @@
       </form>
     </div>
     <div ng-show="viewmode=='edit_att'">
-      <div class="row" ng-repeat="attendee in data.attendees" ng-class="{'error-row': attendee.hasError}">
+      <div class="row" ng-repeat="attendee in newAttendees" ng-class="{'error-row': attendee.hasError}">
         <form name='editAttendeeForm' novalidate>
           <div class="p-h-5 col-xs-8">
             <div class="row" ng-hide="attendee.isNameConfigurable">
@@ -94,10 +94,10 @@
                 {{attendee.email}}
               </div>
               <div class="col-xs-4">
-                {{attendee.firstName}}
+                {{attendee.given_name}}
               </div>
               <div class="col-xs-4">
-                {{attendee.lastName}}
+                {{attendee.family_name}}
               </div>
             </div>
             <div class="row" ng-show="attendee.isNameConfigurable">
@@ -105,10 +105,10 @@
                 <input type="text" ng-model="attendee.email" name="email" class="form-control" required autocomplete="off">
               </div>
               <div class="col-xs-4" ng-class="{'has-error': editAttendeeForm.firstname.$invalid && editAttendeeForm.firstname.$dirty }">
-                <input type="text" ng-model="attendee.firstName" name="firstname" class="form-control" placeholder="First Name" required>
+                <input type="text" ng-model="attendee.given_name" name="firstname" class="form-control" placeholder="First Name" required>
               </div>
               <div class="col-xs-4" ng-class="{'has-error': editAttendeeForm.lastname.$invalid && editAttendeeForm.lastname.$dirty }">
-                <input type="text" ng-model="attendee.lastName" name="lastname" class="form-control" placeholder="Last Name" required>
+                <input type="text" ng-model="attendee.family_name" name="lastname" class="form-control" placeholder="Last Name" required>
               </div>
             </div>
           </div>
@@ -127,12 +127,12 @@
               <span ng-hide="newAttendee.isNameConfigurable">{{newAttendee.email}}</span>
             </div>
             <div class="col-xs-4" ng-class="{'has-error': newAttendeeForm.firstname.$invalid && newAttendeeForm.firstname.$dirty }">
-              <input type="text" ng-model="newAttendee.firstName" name="firstname" class="form-control" placeholder="First Name" required ng-show="newAttendee.isNameConfigurable">
-              <span ng-hide="newAttendee.isNameConfigurable">{{newAttendee.firstName}}</span>
+              <input type="text" ng-model="newAttendee.given_name" name="firstname" class="form-control" placeholder="First Name" required ng-show="newAttendee.isNameConfigurable">
+              <span ng-hide="newAttendee.isNameConfigurable">{{newAttendee.given_name}}</span>
             </div>
             <div class="col-xs-4" ng-class="{'has-error': newAttendeeForm.lastname.$invalid && newAttendeeForm.lastname.$dirty }">
-              <input type="text" ng-model="newAttendee.lastName" name="lastname" class="form-control" placeholder="Last Name" required ng-show="newAttendee.isNameConfigurable">
-              <span ng-hide="newAttendee.isNameConfigurable">{{newAttendee.lastName}}</span>
+              <input type="text" ng-model="newAttendee.family_name" name="lastname" class="form-control" placeholder="Last Name" required ng-show="newAttendee.isNameConfigurable">
+              <span ng-hide="newAttendee.isNameConfigurable">{{newAttendee.family_name}}</span>
             </div>
           </div>
         </div>
@@ -180,10 +180,10 @@
                 {{attendee.email}}
               </div>
               <div class="col-xs-4">
-                {{attendee.firstName}}
+                {{attendee.given_name}}
               </div>
               <div class="col-xs-4">
-                {{attendee.lastName}}
+                {{attendee.family_name}}
               </div>
             </div>
             <div class="row" ng-show="attendee.isNameConfigurable">
@@ -191,10 +191,10 @@
                 <input type="text" ng-model="attendee.email" name="email" class="form-control" required autocomplete="off">
               </div>
               <div class="col-xs-4" ng-class="{'has-error': editAttendeeForm.firstname.$invalid && editAttendeeForm.firstname.$dirty }">
-                <input type="text" ng-model="attendee.firstName" name="firstname" class="form-control" placeholder="First Name" required>
+                <input type="text" ng-model="attendee.given_name" name="firstname" class="form-control" placeholder="First Name" required>
               </div>
               <div class="col-xs-4" ng-class="{'has-error': editAttendeeForm.lastname.$invalid && editAttendeeForm.lastname.$dirty }">
-                <input type="text" ng-model="attendee.lastName" name="lastname" class="form-control" placeholder="Last Name" required>
+                <input type="text" ng-model="attendee.family_name" name="lastname" class="form-control" placeholder="Last Name" required>
               </div>
             </div>
           </div>
@@ -213,12 +213,12 @@
               <span ng-hide="newAttendee.isNameConfigurable">{{newAttendee.email}}</span>
             </div>
             <div class="col-xs-4" ng-class="{'has-error': newAttendeeForm.firstname.$invalid && newAttendeeForm.firstname.$dirty }">
-              <input type="text" ng-model="newAttendee.firstName" name="firstname" class="form-control" placeholder="First Name" required ng-show="newAttendee.isNameConfigurable">
-              <span ng-hide="newAttendee.isNameConfigurable">{{newAttendee.firstName}}</span>
+              <input type="text" ng-model="newAttendee.given_name" name="firstname" class="form-control" placeholder="First Name" required ng-show="newAttendee.isNameConfigurable">
+              <span ng-hide="newAttendee.isNameConfigurable">{{newAttendee.given_name}}</span>
             </div>
             <div class="col-xs-4" ng-class="{'has-error': newAttendeeForm.lastname.$invalid && newAttendeeForm.lastname.$dirty }">
-              <input type="text" ng-model="newAttendee.lastName" name="lastname" class="form-control" placeholder="Last Name" required ng-show="newAttendee.isNameConfigurable">
-              <span ng-hide="newAttendee.isNameConfigurable">{{newAttendee.lastName}}</span>
+              <input type="text" ng-model="newAttendee.family_name" name="lastname" class="form-control" placeholder="Last Name" required ng-show="newAttendee.isNameConfigurable">
+              <span ng-hide="newAttendee.isNameConfigurable">{{newAttendee.family_name}}</span>
             </div>
           </div>
         </div>

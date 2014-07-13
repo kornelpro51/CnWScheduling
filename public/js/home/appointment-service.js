@@ -46,7 +46,7 @@ angular.module('scheduler').factory('AppointmentService',['$http', '$resource', 
 			return promise;
 		},
 		modifyApptGroupUsers: function(apptGroupId, users) {
-			var promise = $http.put('/api/v1/appointment/appts/' + apptGroupId, users).then(function (response) {
+			var promise = $http.put('/api/v1/appointment/appts/' + apptGroupId+ '/users', users).then(function (response) {
 				return response;
 			});
 			return promise;
