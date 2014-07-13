@@ -24,6 +24,7 @@ module.exports = function(db) {
 			})
         },
         apptGroupList : function (req, res) {
+            console.log(" *** apptGroupList *** ",req.query);
         	db.ApptGroup.findAll({ include: [
 	        		{ model: db.ApptGroupMembers, as: 'attendees' }, 
 	        		{ model: db.Appt, as: 'appointmentEvents' }
@@ -142,7 +143,14 @@ module.exports = function(db) {
             }
         },
         getAppointmentGroup: function (req, res) {
-        	Response.success(res, res.apptGroup);
+        	db.ApptGroup.find({ include: [
+                    { model: db.ApptGroupMembers, as: 'attendees' }, 
+                    { model: db.Appt, as: 'appointmentEvents' }
+                ], where: {appt_group_id : req.params.apptsId} }).success(function(group) {
+                Response.success(res, group);
+            }).error(function(err) {
+                Response.error(res, err, "Can not get appointment groups.");
+            });
         },
         getAppointment: function (req, res) {
             Response.success(res, res.appointment);

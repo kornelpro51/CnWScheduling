@@ -19,14 +19,20 @@ angular.module('scheduler')
                 },
                 viewRender: function(view, element) {
                     console.log("view changed", view.visStart, view.visEnd, view.start, view.end);
-
-                    initialize();
+                    $scope.viewportDates.start = view.visStart;
+                    $scope.viewportDates.end = view.visEnd;
+                    initialize($scope.viewportDates);
                 },
                 windowResize: function( view) {
                     console.log("resize event fired");
                 }
             }
         }
+
+        $scope.viewportDates = {
+            start : new Date(),
+            end : new Date()
+        };
 
         $scope.calendarSource = [];
         $scope.appointmentInfos = [];
@@ -113,8 +119,8 @@ angular.module('scheduler')
                 data.endTime = dateFormat(data.ends_at, "hh:MM TT");
             }
         }
-        function initialize() {
-            AppointmentService.getApptGroupList().then(function(data) {
+        function initialize(timeRange) {
+            AppointmentService.getApptGroupList(timeRange).then(function(data) {
                 $scope.appointmentInfos = data.data.result.groups;
                 $scope.userInfos = data.data.result.users;
                 angular.forEach($scope.appointmentInfos, function(value, key) {
@@ -133,6 +139,8 @@ angular.module('scheduler')
 
         $scope.$on('refreshAppointment', function(event, apptGroupId) {
             console.log(' ** refreshAppointment ** ');
+            $scope.calendarSource.splice(0,$scope.calendarSource.length);
+            initialize();
         });
 
         $scope.alertEventClick = function (calEvent, jsEvent, view, target) {
@@ -208,7 +216,11 @@ angular.module('scheduler')
                             return pr;
                         },
                         pickupDate: function() { return date; },
-                        initialData: function () { return initialData; }
+                        //initialData: function () { return initialData; },
+                        initialData: function () {
+                            var pr = AppointmentService.getApptGroup(initialData.appt_group_id);
+                            return pr;
+                        },
                     }
                 });
             }
@@ -649,10 +661,27 @@ angular.module('scheduler')
         });
         return userInfo;
     }
-
+    function convertFromDBFormat(data) {
+        if( Object.prototype.toString.call( data ) === '[object Array]' ) {
+            angular.forEach(data, function(value, key) {
+                value.date = dateFormat(value.starts_at, "mm/dd/yyyy");
+                value.starts_at = new Date(value.starts_at);
+                value.ends_at = new Date(value.ends_at);
+                value.startTime = dateFormat(value.starts_at, "hh:MM TT");
+                value.endTime = dateFormat(value.ends_at, "hh:MM TT");
+            })
+        } else {
+            data.date = dateFormat(data.starts_at, "mm/dd/yyyy");
+            data.starts_at = new Date(data.starts_at);
+            data.ends_at = new Date(data.ends_at);
+            data.startTime = dateFormat(data.starts_at, "hh:MM TT");
+            data.endTime = dateFormat(data.ends_at, "hh:MM TT");
+        }
+    }
     function InitializeData() {
-        if ( initialData ) {
-            $scope.data = jQuery.extend({}, initialData);
+        if ( initialData.status == 200 && initialData.data.success) {
+            $scope.data = jQuery.extend({}, initialData.data.result);
+            convertFromDBFormat($scope.data.appointmentEvents);
             if ($scope.data.appointmentEvents && $scope.data.appointmentEvents.length > 0) {
                 $scope.currentAppointment = $scope.data.appointmentEvents[0]
                 $scope.currentPos = 0;
@@ -811,6 +840,7 @@ angular.module('scheduler')
             if(result.data.success) {
                 angular.extend($scope.currentAppointment, $scope.newAppointment);
                 showNotification('The appointment was saved successfully.');
+                EventShareService.refreshAppointment($scope.data.appt_group_id);
                 if (mode) {
                     $scope.changeDlgMode('view');
                 }

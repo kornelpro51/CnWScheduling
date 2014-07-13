@@ -21,8 +21,8 @@ angular.module('scheduler').factory('AppointmentService',['$http', '$resource', 
 		// --------------------------------------------------------------
 		// --------------   Appointment Group services ------------------
 		// --------------------------------------------------------------
-		getApptGroupList: function () {
-			var promise = $http.get('/api/v1/appointment/appts').then(function (response) {
+		getApptGroupList: function (timeRange) {
+			var promise = $http.get('/api/v1/appointment/appts?start='+timeRange.start.format('yyyy-mm-dd')+'&end='+timeRange.end.format('yyyy-mm-dd'), timeRange).then(function (response) {
 				return response;
 			});
 			return promise;
