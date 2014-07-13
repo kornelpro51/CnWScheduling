@@ -120,6 +120,8 @@ angular.module('scheduler')
             }
         }
         function initialize(timeRange) {
+            console.log(' ** refreshAppointment ** ');
+            $scope.calendarSource.splice(0,$scope.calendarSource.length);
             AppointmentService.getApptGroupList(timeRange).then(function(data) {
                 $scope.appointmentInfos = data.data.result.groups;
                 $scope.userInfos = data.data.result.users;
@@ -138,8 +140,7 @@ angular.module('scheduler')
         }
 
         $scope.$on('refreshAppointment', function(event, apptGroupId) {
-            console.log(' ** refreshAppointment ** ');
-            $scope.calendarSource.splice(0,$scope.calendarSource.length);
+            
             initialize($scope.viewportDates);
         });
 
