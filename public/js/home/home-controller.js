@@ -1,5 +1,5 @@
 angular.module('scheduler')
-    .controller('HomeController', ['$scope', '$location', '$injector','$modal', 'AppointmentService', function ($scope, $location, $injector, $modal, AppointmentService) {
+    .controller('HomeController', ['$scope', '$location', '$injector','$modal', 'AppointmentService', 'EventShareService', function ($scope, $location, $injector, $modal, AppointmentService, EventShareService) {
         var calendarHeight = getCalendarHeight();
         $scope.uiConfig = {
             calendar: {
@@ -19,12 +19,20 @@ angular.module('scheduler')
                 },
                 viewRender: function(view, element) {
                     console.log("view changed", view.visStart, view.visEnd, view.start, view.end);
+                    $scope.viewportDates.start = view.visStart;
+                    $scope.viewportDates.end = view.visEnd;
+                    initialize($scope.viewportDates);
                 },
                 windowResize: function( view) {
                     console.log("resize event fired");
                 }
             }
         }
+
+        $scope.viewportDates = {
+            start : new Date(),
+            end : new Date()
+        };
 
         $scope.calendarSource = [];
         $scope.appointmentInfos = [];
@@ -56,14 +64,14 @@ angular.module('scheduler')
             var eventLabel = "";
             calEvent.events = [];
             if (data.attendees.length > 1) {
-                if (typeof data.attendees[0].firstName == "string") {
-                    eventLabel = data.attendees[0].firstName + " " + data.attendees[0].lastName + " ...";
+                if (typeof data.attendees[0].given_name == "string") {
+                    eventLabel = data.attendees[0].given_name + " " + data.attendees[0].family_name + " ...";
                 } else {
                     eventLabel = getUserNameById(data.attendees[0].user_id) + " ...";
                 }
             } else if (data.attendees.length > 0) {
-                if (typeof data.attendees[0].firstName == "string") {
-                    eventLabel = data.attendees[0].firstName + " " + data.attendees[0].lastName;
+                if (typeof data.attendees[0].given_name == "string") {
+                    eventLabel = data.attendees[0].given_name + " " + data.attendees[0].family_name;
                 } else {
                     eventLabel = getUserNameById(data.attendees[0].user_id);
                 }
@@ -111,9 +119,8 @@ angular.module('scheduler')
                 data.endTime = dateFormat(data.ends_at, "hh:MM TT");
             }
         }
-
-        $scope.init = function () {
-            AppointmentService.getApptGroupList().then(function(data) {
+        function initialize(timeRange) {
+            AppointmentService.getApptGroupList(timeRange).then(function(data) {
                 $scope.appointmentInfos = data.data.result.groups;
                 $scope.userInfos = data.data.result.users;
                 angular.forEach($scope.appointmentInfos, function(value, key) {
@@ -125,6 +132,16 @@ angular.module('scheduler')
                 window.location.href = "/";
             });
         }
+
+        $scope.init = function () {
+            //initialize();
+        }
+
+        $scope.$on('refreshAppointment', function(event, apptGroupId) {
+            console.log(' ** refreshAppointment ** ');
+            $scope.calendarSource.splice(0,$scope.calendarSource.length);
+            initialize();
+        });
 
         $scope.alertEventClick = function (calEvent, jsEvent, view, target) {
             $scope.openWizard(dateFormat(calEvent.start, "mm/dd/yyyy"), calEvent.source.meta);
@@ -157,7 +174,7 @@ angular.module('scheduler')
                 modalInstance.result.then(function (appt) {
                     convertToDBFormat(appt.appointmentEvents);
                     if (typeof appt.appt_group_id == "undefined") { // new appointment is created.
-                        AppointmentService.createAppointment(appt).then(function(result) {
+                        AppointmentService.createApptGroup(appt).then(function(result) {
                             if ( result.data && result.data.success) {
                                 appt.appt_group_id = result.data.result.appt_group_id;
                             }
@@ -187,6 +204,7 @@ angular.module('scheduler')
                 var modalInstance = $modal.open({
                     templateUrl: 'viewAppointmentModal.html',
                     controller: 'ViewAppointmentCtrl',
+                    windowClass: 'min-dialog',
                     size: 'lg',
                     resolve: {
                         paramUsers: function () {
@@ -198,7 +216,11 @@ angular.module('scheduler')
                             return pr;
                         },
                         pickupDate: function() { return date; },
-                        initialData: function () { return initialData; }
+                        //initialData: function () { return initialData; },
+                        initialData: function () {
+                            var pr = AppointmentService.getApptGroup(initialData.appt_group_id);
+                            return pr;
+                        },
                     }
                 });
             }
@@ -270,8 +292,8 @@ angular.module('scheduler')
     function ResetAttendee () {
         $scope.newAttendee = {
             email : '',
-            firstName : '',
-            lastName : '',
+            given_name : '',
+            family_name : '',
             isNameConfigurable : true
         }
     }
@@ -353,8 +375,8 @@ angular.module('scheduler')
             $scope.data = jQuery.extend({}, initialData);
             angular.forEach($scope.data.attendees, function(attendee, key) {
                 var user = getUserInfo(attendee.user_id);
-                attendee.firstName = user.given_name;
-                attendee.lastName = user.family_name;
+                attendee.given_name = user.given_name;
+                attendee.family_name = user.family_name;
                 attendee.email = user.email;
                 attendee.editMode = false;
             });
@@ -439,12 +461,12 @@ angular.module('scheduler')
             }
             if ( typeof newID == 'object' ) {
                 $scope.newAttendee.isNameConfigurable = false;
-                $scope.newAttendee.firstName = newID.given_name;
-                $scope.newAttendee.lastName = newID.family_name;
+                $scope.newAttendee.given_name = newID.given_name;
+                $scope.newAttendee.family_name = newID.family_name;
                 $scope.newAttendee.email = newID.email;
                 var att = jQuery.extend({}, $scope.newAttendee);
-                att.firstName = $scope.newAttendee.id.given_name;
-                att.lastName = $scope.newAttendee.id.family_name;
+                att.given_name = $scope.newAttendee.id.given_name;
+                att.family_name = $scope.newAttendee.id.family_name;
                 att.email = $scope.newAttendee.id.email;
                 att.user_id = $scope.newAttendee.id.user_id;
                 $('#newAttendeeForm').find('input[name="email"]').focus();
@@ -455,9 +477,10 @@ angular.module('scheduler')
                 for(var idx in $scope.info.users) {
                     if (newID == $scope.info.users[idx].email ) {
                         $scope.newAttendee.isNameConfigurable = false;
-                        $scope.newAttendee.firstName = $scope.info.users[idx].given_name;
-                        $scope.newAttendee.lastName = $scope.info.users[idx].family_name;
+                        $scope.newAttendee.given_name = $scope.info.users[idx].given_name;
+                        $scope.newAttendee.family_name = $scope.info.users[idx].family_name;
                         $scope.newAttendee.email = $scope.info.users[idx].email;
+                        $scope.newAttendee.id = $scope.info.users[idx];
                         return;
                     }
                 }
@@ -496,8 +519,8 @@ angular.module('scheduler')
         if (form.$valid) {
             var att = jQuery.extend({}, $scope.newAttendee);
             if (typeof $scope.newAttendee.id == 'object') {
-                att.firstName = $scope.newAttendee.id.given_name;
-                att.lastName = $scope.newAttendee.id.family_name;
+                att.given_name = $scope.newAttendee.id.given_name;
+                att.family_name = $scope.newAttendee.id.family_name;
                 att.email = $scope.newAttendee.id.email;
                 att.user_id = $scope.newAttendee.id.user_id;
             } else {
@@ -511,8 +534,8 @@ angular.module('scheduler')
             ResetAttendee();
         } else {
             form.email.$dirty = true;
-            form.firstname.$dirty = true;
-            form.lastname.$dirty = true;
+            form.given_name.$dirty = true;
+            form.family_name.$dirty = true;
             alert("Please select a email address and input user names.");
         }
     }
@@ -520,23 +543,16 @@ angular.module('scheduler')
         var userInfo = getCustomizedUserInfo(attendee.user_id);
         if (userInfo) {
             attendee.email = userInfo.email;
-            attendee.firstName = userInfo.given_name;
-            attendee.lastName = userInfo.family_name;
+            attendee.given_name = userInfo.given_name;
+            attendee.family_name = userInfo.family_name;
         }
     }
     $scope.editAttendee = function(attendee) {
-        //attendee.editMode = true;
+        attendee.editMode = true;
     }
     $scope.completeAttendee = function (form, attendee) {
         if (form.$valid) {
-            //attendee.editMode = false;
-            /*if (attendee.id.user_id) {
-                attendee.user_id = attendee.id.user_id;
-                attendee.email = attendee.id.email;
-            } else {
-                attendee.user_id = attendee.id.id;
-                attendee.email = attendee.id.text;
-            }*/
+            attendee.editMode = false;
             attendee.email = getUserEmail(attendee.user_id);
         } else {
             form.$setDirty();
@@ -604,7 +620,7 @@ angular.module('scheduler')
 }]);
 
 angular.module('scheduler')
-    .controller('ViewAppointmentCtrl', ['$scope', '$modalInstance', 'paramUsers', 'paramTypes', 'pickupDate', 'initialData', function ($scope, $modalInstance, paramUsers, paramTypes, pickupDate, initialData) {
+    .controller('ViewAppointmentCtrl', ['$scope', '$rootScope', '$timeout', '$modalInstance', 'AppointmentService', 'EventShareService', 'paramUsers', 'paramTypes', 'pickupDate', 'initialData', function ($scope, $rootScope, $timeout, $modalInstance, AppointmentService, EventShareService, paramUsers, paramTypes, pickupDate, initialData) {
 
     $scope.currentAppointment = null;
     $scope.currentPos = 0;
@@ -619,6 +635,13 @@ angular.module('scheduler')
         users: [],
         types: []
     }
+    $scope.newAttendee = {};
+
+    $scope.notify = {
+        visible : false,
+        message : ''
+    }
+    $scope.viewmode = 'view';
 
     function LoadInformations () {
         if ( paramUsers.status == 200 && paramUsers.data.success ) {
@@ -638,10 +661,27 @@ angular.module('scheduler')
         });
         return userInfo;
     }
-
+    function convertFromDBFormat(data) {
+        if( Object.prototype.toString.call( data ) === '[object Array]' ) {
+            angular.forEach(data, function(value, key) {
+                value.date = dateFormat(value.starts_at, "mm/dd/yyyy");
+                value.starts_at = new Date(value.starts_at);
+                value.ends_at = new Date(value.ends_at);
+                value.startTime = dateFormat(value.starts_at, "hh:MM TT");
+                value.endTime = dateFormat(value.ends_at, "hh:MM TT");
+            })
+        } else {
+            data.date = dateFormat(data.starts_at, "mm/dd/yyyy");
+            data.starts_at = new Date(data.starts_at);
+            data.ends_at = new Date(data.ends_at);
+            data.startTime = dateFormat(data.starts_at, "hh:MM TT");
+            data.endTime = dateFormat(data.ends_at, "hh:MM TT");
+        }
+    }
     function InitializeData() {
-        if ( initialData ) {
-            $scope.data = jQuery.extend({}, initialData);
+        if ( initialData.status == 200 && initialData.data.success) {
+            $scope.data = jQuery.extend({}, initialData.data.result);
+            convertFromDBFormat($scope.data.appointmentEvents);
             if ($scope.data.appointmentEvents && $scope.data.appointmentEvents.length > 0) {
                 $scope.currentAppointment = $scope.data.appointmentEvents[0]
                 $scope.currentPos = 0;
@@ -649,15 +689,111 @@ angular.module('scheduler')
             }
             angular.forEach($scope.data.attendees, function(attendee, key) {
                 var user = getUserInfo(attendee.user_id);
-                attendee.firstName = user.given_name;
-                attendee.lastName = user.family_name;
+                attendee.given_name = user.given_name;
+                attendee.family_name = user.family_name;
                 attendee.email = user.email;
             });
         }
     }
 
+    function convertToDBFormat(data) {
+        if( Object.prototype.toString.call( data ) === '[object Array]' ) {
+            angular.forEach(data, function(value, key) {
+                value.starts_at = new Date(value.date + " " + value.startTime);
+                value.ends_at = new Date(value.date + " " + value.endTime);
+            })
+        } else {
+            data.starts_at = new Date(data.date + " " + data.startTime);
+            data.ends_at = new Date(data.date + " " + data.endTime);
+        }
+    }
+    function ResetAttendee () {
+        $scope.newAttendee = {
+            email : '',
+            given_name : '',
+            family_name : '',
+            isNameConfigurable : true
+        }
+    }
+    function convertInfoUsers2BSTypeahead () {
+        angular.forEach($scope.info.users, function(user, idx) {
+            user.label = user.email + " (" + user.given_name + ", " + user.family_name + ")";
+            user.value = user.email;
+        });
+    }
+
+    function isDuplicateAttendeesExist() {
+        var isExist = false;
+        for( var idx = 0; idx < $scope.newAttendees.length - 1; idx++ ) {
+            for( var idx2 = idx + 1; idx2 < $scope.newAttendees.length; idx2++ ) {
+                if ($scope.newAttendees[idx].email == $scope.newAttendees[idx2].email) {
+                    $scope.newAttendees[idx].hasError = true;
+                    $scope.newAttendees[idx2].hasError = true;
+                    isExist = true;
+                }
+            }
+        }
+        return isExist;
+    }
+
     LoadInformations();
     InitializeData();
+    ResetAttendee();
+    convertInfoUsers2BSTypeahead();
+
+    $scope.$watch('newAppointment.type', function( newType, oldType ){
+        if (typeof newType != 'undefined' ) {
+            if ( newType === oldType ) {
+                return;
+            }
+            for (var i = 0; i < $scope.info.types.length; i++) {
+                if( $scope.info.types[i].appt_type_id == newType ) {
+                    $scope.newAppointment.title = $scope.info.types[i].title;
+                    $scope.newAppointment.description = $scope.info.types[i].description;
+                }
+            };
+        }
+    });
+
+    $scope.$watch('newAttendee.id', function( newID, oldID ) {
+        if ( newID ) {
+            if ( newID == oldID ) {
+                return;
+            }
+            if ( typeof newID == 'object' ) {
+                $scope.newAttendee.isNameConfigurable = false;
+                $scope.newAttendee.given_name = newID.given_name;
+                $scope.newAttendee.family_name = newID.family_name;
+                $scope.newAttendee.email = newID.email;
+                $scope.newAttendee.user_id = newID.user_id;
+
+                var att = jQuery.extend({}, $scope.newAttendee);
+                $('#newAttendeeForm').find('input[name="email"]').focus();
+                $scope.newAttendees.push(att);
+                $scope.myform.$setPristine();
+                ResetAttendee();
+            } else {
+                for(var idx in $scope.info.users) {
+                    if (newID == $scope.info.users[idx].email ) {
+                        $scope.newAttendee.id = $scope.info.users[idx];
+                        return;
+                    }
+                }
+                $scope.newAttendee.isNameConfigurable = true;
+                $scope.newAttendee.email = newID;
+            }
+        }
+    });
+    $scope.$on('$typeahead.select', function(evt, value, id) {
+        if ( typeof value == 'object' ) {
+            $scope.$digest();
+        }
+    });
+    $scope.initFormDirty = function(form) {
+        console.log("---- initFormDirty ---- ");
+        form.$setPristine();
+        $scope.myform = form;
+    }
 
     $scope.nextAppointment = function() {
         if ( $scope.currentPos < $scope.endPos ) {
@@ -671,6 +807,159 @@ angular.module('scheduler')
             $scope.currentAppointment = $scope.data.appointmentEvents[$scope.currentPos];
         }
     }
+    
+    $scope.changeDlgMode = function ( mode ) {
+        $scope.viewmode = mode;
+        if ($scope.viewmode == 'new_appt') {
+            delete $scope.currentAppointment.type;
+            $scope.newAppointment = angular.extend({}, $scope.currentAppointment);
+        } else if ($scope.viewmode == 'edit_appt') {
+            delete $scope.currentAppointment.type;
+            $scope.newAppointment = angular.extend({}, $scope.currentAppointment);
+        } else if ( $scope.viewmode == 'edit_att' ) {
+            $scope.newAttendees = angular.extend([], $scope.data.attendees);
+            ResetAttendee();
+        } else if ($scope.viewmode == 'view') {
+            delete $scope.newAppointment;
+            delete $scope.newAttendees;
+        }
+    }
+    function showNotification(msg, d) {
+        var delay = d || 3000;
+        $scope.notify.visible = true;
+        $scope.notify.message = msg;
+        $timeout.cancel($scope.notify.timeout);
+        $scope.notify.timeout = $timeout(function() {
+            $scope.notify.visible = false;
+        }, delay);
+    }
+
+    $scope.SaveAppointment = function ( mode ) {
+        convertToDBFormat($scope.newAppointment);
+        AppointmentService.modifyAppointment($scope.data.appt_group_id, $scope.currentAppointment.appt_id, $scope.newAppointment).then(function(result) {
+            if(result.data.success) {
+                angular.extend($scope.currentAppointment, $scope.newAppointment);
+                showNotification('The appointment was saved successfully.');
+                EventShareService.refreshAppointment($scope.data.appt_group_id);
+                if (mode) {
+                    $scope.changeDlgMode('view');
+                }
+            } else {
+                showNotification('Appointment is not saved.');
+            }
+        }, function(reason) {
+            console.error(reason);
+            alert('Failed on save appointment');
+        });
+    }
+    $scope.DeleteAppointment = function (  ) {
+        if ($scope.data.appointmentEvents.length <= 1) {
+            if(confirm("If you delete last appointment this appointment group will be deleted. Are you sure?")) {
+                $scope.DeleteAppointmentGroup();
+            }
+            return;
+        }
+        AppointmentService.deleteAppointment($scope.data.appt_group_id, $scope.currentAppointment.appt_id).then(function(result) {
+            if(result.data.success) {
+                $scope.data.appointmentEvents.splice($scope.currentPos, 1);
+                $scope.endPos = $scope.data.appointmentEvents.length - 1;
+                if ($scope.currentPos > $scope.endPos) {
+                    $scope.currentPos = $scope.endPos;
+                }
+                $scope.currentAppointment = $scope.data.appointmentEvents[$scope.currentPos];
+                $scope.changeDlgMode('view');
+            } else {
+                showNotification('Appointment is not saved.');
+            }
+        }, function(reason) {
+            console.error(reason);
+            alert('Failed on delete appointment');
+        });
+    }
+    $scope.DeleteAppointmentGroup = function() {
+        AppointmentService.deleteApptGroup($scope.data.appt_group_id).then(function(result) {
+            if( result.data.success) {
+                $modalInstance.dismiss('cancel');
+            } else {
+                alert(result.data.msg);
+            }
+        }, function(reason) {
+            console.error(reason);
+            alert('Failed on delete of the appointment group.');
+        });
+    }
+
+
+
+    $scope.addAttendee = function (form) {
+        if (form.$valid) {
+            var att = jQuery.extend({}, $scope.newAttendee);
+            if (typeof $scope.newAttendee.id == 'object') {
+                att.given_name = $scope.newAttendee.id.given_name;
+                att.family_name = $scope.newAttendee.id.family_name;
+                att.email = $scope.newAttendee.id.email;
+                att.user_id = $scope.newAttendee.id.user_id;
+            } else {
+                att.email = $scope.newAttendee.id;
+                att.user_id = null;
+            }
+
+            $('#newAttendeeForm').find('input[name="email"]').focus();
+            $scope.newAttendees.push(att);
+            form.$setPristine();
+            ResetAttendee();
+        } else {
+            form.email.$dirty = true;
+            form.given_name.$dirty = true;
+            form.family_name.$dirty = true;
+            alert("Please select a email address and input user names.");
+        }
+    }
+    $scope.removeAttendee = function (attendee, index) {
+        if(confirm("Are you sure you want to remove the selected attendee?")) {
+            $scope.newAttendees.splice(index, 1);
+        }
+    }
+    $scope.SaveAttendees = function(mode) {
+        if ($scope.newAttendees.length < 1) {
+            alert('Please add attendees.');
+            return;
+        }
+        if (isDuplicateAttendeesExist()) {
+            alert('Some of the email addresses are duplicated.');
+            return;
+        }
+        AppointmentService.createNewUsers($scope.newAttendees).then(function(result) {
+            if (result.data && result.data.success) {
+                angular.forEach(result.data.result, function(user_db, idx) {
+                    angular.forEach($scope.newAttendees, function (user_client, idx) {
+                        if (user_client.email == user_db.email && user_db.user_id != null) {
+                            user_client.user_id = user_db.user_id;
+                        }
+                    });
+                });
+                AppointmentService.modifyApptGroupUsers( $scope.data.appt_group_id, $scope.newAttendees).then(function() {
+                    delete $scope.data.attendees;
+                    $scope.data.attendees = angular.extend([], $scope.newAttendees);
+                    showNotification("The attendees information updated successfully.");
+                    
+                    EventShareService.refreshAppointment($scope.data.appt_group_id);
+
+                    if (mode) {
+                        $scope.changeDlgMode('view');
+                    }
+                });
+            } else if (result.data) {
+                alert(result.data.msg)
+            } else {
+                alert("Did not save users.");
+            }
+        }, function(reason) {
+            console.error(reason);
+            alert('Failed on save appointment');
+        });
+    }
+
     $scope.close = function () {
         $modalInstance.dismiss('cancel');
     };

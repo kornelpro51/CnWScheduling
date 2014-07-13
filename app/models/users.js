@@ -8,7 +8,7 @@ module.exports = function(sequelize, Sequelize) {
 			created_at: Sequelize.DATE,
 			given_name: Sequelize.STRING,
 			family_name: Sequelize.STRING,
-			email: Sequelize.STRING,
+			email: {type: Sequelize.STRING, unique: true},
 			type: Sequelize.INTEGER(5)
 		},
 		{
